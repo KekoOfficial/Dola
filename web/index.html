@@ -5,112 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Juego Multiplicadores</title>
     <style>
-        :root {
-            --fondo: #0f172a;
-            --panel: #1e293b;
-            --texto: #f8fafc;
-            --titulo: #3b82f6;
-            --acento: #2563eb;
-            --exito: #16a34a;
-            --alerta: #f59e0b;
-            --gris: #475569;
-            --borde: #334155;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-        }
-
-        body {
-            background-color: var(--fondo);
-            color: var(--texto);
-            padding: 20px 15px;
-            line-height: 1.6;
-        }
-
-        .contenedor {
-            max-width: 700px;
-            margin: 0 auto;
-            background-color: var(--panel);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            border: 1px solid var(--borde);
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 25px;
-            color: var(--titulo);
-            font-size: 2rem;
-        }
-
-        .panel-estado {
-            background-color: rgba(59, 130, 246, 0.08);
-            padding: 18px;
-            border-radius: 8px;
-            margin-bottom: 30px;
-            border-left: 4px solid var(--acento);
-        }
-
-        .panel-estado p {
-            font-size: 1.2rem;
-            margin: 10px 0;
-        }
-
-        .navegacion {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 14px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            text-decoration: none;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            font-size: 1.1rem;
-            text-align: center;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-        }
-
-        .btn-accion {
-            background-color: var(--acento);
-            color: white;
-        }
+        :root { --fondo:#0f172a; --panel:#1e293b; --texto:#f8fafc; --titulo:#3b82f6; --acento:#2563eb; --exito:#16a34a; --alerta:#f59e0b; --gris:#475569; --borde:#334155; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:Segoe UI, Roboto, Arial, sans-serif; }
+        body { background:var(--fondo); color:var(--texto); padding:20px 15px; line-height:1.6; }
+        .contenedor { max-width:700px; margin:0 auto; background:var(--panel); padding:25px; border-radius:12px; box-shadow:0 4px 20px #0003; border:1px solid var(--borde); }
+        h1 { text-align:center; margin-bottom:25px; color:var(--titulo); font-size:2rem; }
+        .panel-estado { background:rgba(59,130,246,0.08); padding:18px; border-radius:8px; margin-bottom:30px; border-left:4px solid var(--acento); }
+        .panel-estado p { font-size:1.2rem; margin:10px 0; }
+        .navegacion { display:flex; flex-direction:column; gap:12px; margin-top:20px; }
+        .btn { padding:14px; border:none; border-radius:8px; font-weight:bold; text-decoration:none; text-align:center; cursor:pointer; transition:0.2s; font-size:1.1rem; }
+        .btn:hover { transform:translateY(-2px); box-shadow:0 4px 12px #2563eb66; }
+        .btn-accion { background:var(--acento); color:white; }
     </style>
 </head>
 <body>
     <div class="contenedor">
         <h1>🎮 JUEGO MULTIPLICADORES</h1>
-
         <div class="panel-estado">
-            <p>💵 Dinero: <span id="dinero">$100.00</span></p>
+            <p>💵 Dinero: <span id="dinero">$0.00</span></p>
             <p>⚡ Multiplicador Total: x<span id="multiplicador">1.00</span></p>
             <p>🖥️ Nivel CPU: <span id="nivel_cpu">1</span></p>
             <p>🔄 Renacimientos: <span id="renacimientos">0</span> | Bono: x<span id="bono_renacimiento">1.00</span></p>
-            <p>📈 Ganancia: $<span id="ganancia_seg">0.50</span>/seg</p>
+            <p>📈 Ganancia: $<span id="ganancia_seg">0.00</span>/seg</p>
         </div>
-
         <div class="navegacion">
             <a href="mejoras.html" class="btn btn-accion">🛠️ Mejoras</a>
             <a href="puertas.html" class="btn btn-accion">🚪 Puertas</a>
             <a href="renacimiento.html" class="btn btn-accion">🔄 Renacimiento</a>
+            <a href="estadisticas.html" class="btn btn-accion">📊 Estadísticas</a>
+            <a href="logros.html" class="btn btn-accion">🏆 Logros</a>
+            <a href="prestigio.html" class="btn btn-accion">⭐ Prestigio</a>
         </div>
     </div>
-
     <script src="/js/logica.js"></script>
 </body>
 </html>
