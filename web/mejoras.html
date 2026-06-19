@@ -5,134 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tienda de Mejoras</title>
     <style>
-        :root {
-            --fondo: #0f172a;
-            --panel: #1e293b;
-            --texto: #f8fafc;
-            --titulo: #3b82f6;
-            --acento: #2563eb;
-            --exito: #16a34a;
-            --alerta: #f59e0b;
-            --gris: #475569;
-            --borde: #334155;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-        }
-
-        body {
-            background-color: var(--fondo);
-            color: var(--texto);
-            padding: 20px 15px;
-            line-height: 1.6;
-        }
-
-        .contenedor {
-            max-width: 700px;
-            margin: 0 auto;
-            background-color: var(--panel);
-            padding: 25px;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            border: 1px solid var(--borde);
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 25px;
-            color: var(--titulo);
-            font-size: 1.8rem;
-        }
-
-        .panel-mejora {
-            background-color: rgba(59, 130, 246, 0.08);
-            padding: 18px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            border-left: 4px solid var(--acento);
-        }
-
-        h3 {
-            margin-bottom: 12px;
-            color: var(--texto);
-            font-size: 1.3rem;
-        }
-
-        p {
-            margin: 8px 0;
-            font-size: 1.1rem;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 12px 22px;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            margin: 10px 0;
-            font-size: 1rem;
-            min-width: 120px;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
-        }
-
-        .btn-accion {
-            background-color: var(--acento);
-            color: white;
-        }
-
-        .btn-volver {
-            background-color: var(--gris);
-            color: white;
-            width: 100%;
-        }
+        :root { --fondo:#0f172a; --panel:#1e293b; --texto:#f8fafc; --titulo:#3b82f6; --acento:#2563eb; --exito:#16a34a; --alerta:#f59e0b; --gris:#475569; --borde:#334155; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:Segoe UI, Roboto, Arial, sans-serif; }
+        body { background:var(--fondo); color:var(--texto); padding:20px 15px; line-height:1.6; }
+        .contenedor { max-width:700px; margin:0 auto; background:var(--panel); padding:25px; border-radius:12px; box-shadow:0 4px 20px #0003; border:1px solid var(--borde); }
+        h2 { text-align:center; margin-bottom:25px; color:var(--titulo); font-size:1.8rem; }
+        .panel-mejora { background:rgba(59,130,246,0.08); padding:18px; border-radius:8px; margin-bottom:20px; border-left:4px solid var(--acento); }
+        h3 { margin-bottom:12px; font-size:1.3rem; }
+        p { margin:8px 0; font-size:1.1rem; }
+        .btn { padding:10px 16px; border:none; border-radius:8px; font-weight:bold; cursor:pointer; transition:0.2s; margin:8px 8px 8px 0; }
+        .btn-accion { background:var(--acento); color:white; }
+        .btn-max { background:var(--exito); color:white; }
+        .btn-volver { background:var(--gris); color:white; width:100%; margin-top:15px; padding:12px; font-size:1.1rem; }
     </style>
 </head>
 <body>
     <div class="contenedor">
         <h2>🛠️ TIENDA DE MEJORAS</h2>
-
         <div class="panel-mejora">
             <h3>🖥️ Mejorar CPU</h3>
-            <p>Aumenta tu ganancia base permanente</p>
-            <p>Costo: $<span id="costo_cpu">150.00</span></p>
+            <p>Costo: $<span id="costo_cpu">0.00</span></p>
             <button onclick="accion('mejorar_cpu')" class="btn btn-accion">Comprar</button>
         </div>
-
         <div class="panel-mejora">
             <h3>⚡ Multiplicador Global</h3>
-            <p>Multiplica todas tus ganancias</p>
-            <p>Costo: $<span id="costo_mult">190.00</span></p>
+            <p>Costo: $<span id="costo_mult">0.00</span></p>
             <button onclick="accion('comprar_multiplicador')" class="btn btn-accion">Comprar</button>
         </div>
-
         <div class="panel-mejora">
-            <h3>🔌 Generadores Automáticos</h3>
-            <p>Básico → $0.20/seg | Costo: $<span id="costo_basico">200.00</span> | Cant: <span id="cant_basico">0</span></p>
-            <button onclick="comprarGenerador('basico')" class="btn btn-accion">Comprar</button>
+            <h3>🔌 Generadores</h3>
+            <p>Básico → $0.20/seg | Costo: $<span id="costo_basico">0</span> | Cant: <span id="cant_basico">0</span></p>
+            <button onclick="comprarGenerador('basico')" class="btn btn-accion">+1</button>
+            <button onclick="comprarMax('basico')" class="btn btn-max">Máximo</button>
 
-            <p>Medio → $1.00/seg | Costo: $<span id="costo_medio">1200.00</span> | Cant: <span id="cant_medio">0</span></p>
-            <button onclick="comprarGenerador('medio')" class="btn btn-accion">Comprar</button>
+            <p>Medio → $1.00/seg | Costo: $<span id="costo_medio">0</span> | Cant: <span id="cant_medio">0</span></p>
+            <button onclick="comprarGenerador('medio')" class="btn btn-accion">+1</button>
+            <button onclick="comprarMax('medio')" class="btn btn-max">Máximo</button>
 
-            <p>Avanzado → $5.00/seg | Costo: $<span id="costo_avanzado">7500.00</span> | Cant: <span id="cant_avanzado">0</span></p>
-            <button onclick="comprarGenerador('avanzado')" class="btn btn-accion">Comprar</button>
+            <p>Avanzado → $5.00/seg | Costo: $<span id="costo_avanzado">0</span> | Cant: <span id="cant_avanzado">0</span></p>
+            <button onclick="comprarGenerador('avanzado')" class="btn btn-accion">+1</button>
+            <button onclick="comprarMax('avanzado')" class="btn btn-max">Máximo</button>
 
-            <p>Industrial → $25.00/seg | Costo: $<span id="costo_industrial">40000.00</span> | Cant: <span id="cant_industrial">0</span></p>
-            <button onclick="comprarGenerador('industrial')" class="btn btn-accion">Comprar</button>
+            <p>Industrial → $25.00/seg | Costo: $<span id="costo_industrial">0</span> | Cant: <span id="cant_industrial">0</span></p>
+            <button onclick="comprarGenerador('industrial')" class="btn btn-accion">+1</button>
+            <button onclick="comprarMax('industrial')" class="btn btn-max">Máximo</button>
+
+            <p>Nuclear → $150.00/seg | Costo: $<span id="costo_nuclear">0</span> | Cant: <span id="cant_nuclear">0</span></p>
+            <button onclick="comprarGenerador('nuclear')" class="btn btn-accion">+1</button>
+            <button onclick="comprarMax('nuclear')" class="btn btn-max">Máximo</button>
+
+            <p>Cuántico → $1.000/seg | Costo: $<span id="costo_cuantico">0</span> | Cant: <span id="cant_cuantico">0</span></p>
+            <button onclick="comprarGenerador('cuantico')" class="btn btn-accion">+1</button>
+            <button onclick="comprarMax('cuantico')" class="btn btn-max">Máximo</button>
+
+            <p>Galáctico → $8.000/seg | Costo: $<span id="costo_galactico">0</span> | Cant: <span id="cant_galactico">0</span></p>
+            <button onclick="comprarGenerador('galactico')" class="btn btn-accion">+1</button>
+            <button onclick="comprarMax('galactico')" class="btn btn-max">Máximo</button>
         </div>
-
         <a href="index.html" class="btn btn-volver">⬅️ Volver al menú</a>
     </div>
-
     <script src="/js/logica.js"></script>
 </body>
 </html>
