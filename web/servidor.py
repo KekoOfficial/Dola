@@ -34,13 +34,27 @@ def estado_inicial():
 
 def cargar_estado():
     os.makedirs("datos", exist_ok=True)
+    estado_defecto = estado_inicial()
+
     if os.path.exists(ARCHIVO_DATOS):
         try:
             with open(ARCHIVO_DATOS, "r", encoding="utf-8") as f:
-                return json.load(f)
+                estado_actual = json.load(f)
+            # ✅ Agrega automáticamente cualquier clave que falte
+            for clave, valor in estado_defecto.items():
+                if clave not in estado_actual:
+                    estado_actual[clave] = valor
+            # Corrige también dentro de generadores y puertas
+            for gen_tipo, datos_gen in estado_defecto["generadores"].items():
+                if gen_tipo not in estado_actual["generadores"]:
+                    estado_actual["generadores"][gen_tipo] = datos_gen
+            for puerta_id, datos_puerta in estado_defecto["puertas"].items():
+                if puerta_id not in estado_actual["puertas"]:
+                    estado_actual["puertas"][puerta_id] = datos_puerta
+            return estado_actual
         except:
             pass
-    return estado_inicial()
+    return estado_defecto
 
 def guardar_estado(estado):
     estado["dinero"] = round(estado["dinero"], 2)
@@ -60,7 +74,7 @@ class Manejador(SimpleHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
             estado = cargar_estado()
-            # Actualizar ganancia antes de enviar
+            # Actualizar ganancia
             ahora = time.time()
             segundos = ahora - estado["tiempo_ultima"]
             base = estado["ganancia_cpu"]
@@ -138,6 +152,6 @@ class Manejador(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     servidor = HTTPServer(("0.0.0.0", 8080), Manejador)
-    print("🌐 Servidor en http://localhost:8080")
-    print("✅ Progreso se mantiene al cambiar de página")
+    print("🌐 Servidor corriendo en http://localhost:8080")
+    print("✅ Errores de claves corregidos, progreso se mantiene")
     servidor.serve_forever()
