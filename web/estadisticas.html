@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estadísticas</title>
+    <style>
+        :root { --fondo:#0f172a; --panel:#1e293b; --texto:#f8fafc; --titulo:#3b82f6; --acento:#2563eb; --exito:#16a34a; --gris:#475569; --borde:#334155; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:Segoe UI, Roboto, Arial, sans-serif; }
+        body { background:var(--fondo); color:var(--texto); padding:20px 15px; }
+        .contenedor { max-width:700px; margin:0 auto; background:var(--panel); padding:25px; border-radius:12px; border:1px solid var(--borde); }
+        h2 { text-align:center; margin-bottom:25px; color:var(--titulo); }
+        .panel { background:rgba(59,130,246,0.08); padding:18px; border-radius:8px; margin-bottom:20px; border-left:4px solid var(--acento); }
+        .btn { width:100%; padding:12px; background:var(--gris); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; text-align:center; text-decoration:none; display:block; margin-top:15px; }
+    </style>
+</head>
+<body>
+    <div class="contenedor">
+        <h2>📊 ESTADÍSTICAS GENERALES</h2>
+        <div class="panel">
+            <p>Dinero total ganado: <strong id="total_ganado">$0.00</strong></p>
+            <p>Mejoras de CPU: <strong id="mejoras_cpu">0</strong></p>
+            <p>Generadores comprados: <strong id="generadores_totales">0</strong></p>
+            <p>Puertas abiertas: <strong id="puertas_totales">0</strong></p>
+            <p>Tiempo jugado: <strong id="tiempo_jugado">0h 0m</strong></p>
+            <p>Ganancia máxima: <strong id="ganancia_max">$0.00/seg</strong></p>
+        </div>
+        <a href="index.html" class="btn">⬅️ Volver</a>
+    </div>
+    <script src="/js/logica.js"></script>
+</body>
+</html>
