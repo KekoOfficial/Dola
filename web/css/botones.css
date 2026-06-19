@@ -1,11 +1,45 @@
-:root {
-    --fondo: #0f172a;
-    --panel: #1e293b;
-    --texto: #f8fafc;
-    --titulo: #3b82f6;
-    --acento: #2563eb;
-    --exito: #16a34a;
-    --alerta: #f59e0b;
-    --gris: #475569;
-    --borde: #334155;
+.btn {
+    display: inline-block;
+    padding: 12px 22px;
+    border: none;
+    border-radius: 8px;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin: 8px 5px;
+    font-size: 1rem;
+    text-align: center;
+    min-width: 120px;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.btn-accion {
+    background-color: var(--acento);
+    color: white;
+}
+
+.btn-accion:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-volver {
+    background-color: var(--gris);
+    color: white;
+}
+
+.btn-volver:hover {
+    background-color: #334155;
+}
+
+.navegacion {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
 }
