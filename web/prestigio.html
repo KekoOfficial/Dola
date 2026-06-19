@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prestigio</title>
+    <style>
+        :root { --fondo:#0f172a; --panel:#1e293b; --texto:#f8fafc; --titulo:#3b82f6; --acento:#2563eb; --exito:#16a34a; --alerta:#f59e0b; --gris:#475569; --borde:#334155; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:Segoe UI, Roboto, Arial, sans-serif; }
+        body { background:var(--fondo); color:var(--texto); padding:20px 15px; }
+        .contenedor { max-width:700px; margin:0 auto; background:var(--panel); padding:25px; border-radius:12px; border:1px solid var(--borde); }
+        h2 { text-align:center; margin-bottom:25px; color:var(--titulo); }
+        .panel { background:rgba(59,130,246,0.08); padding:18px; border-radius:8px; margin-bottom:20px; border-left:4px solid var(--acento); }
+        .btn { padding:10px 16px; background:var(--acento); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer; margin-top:8px; }
+        .btn-volver { width:100%; padding:12px; background:var(--gris); color:white; border-radius:8px; text-align:center; text-decoration:none; display:block; margin-top:15px; }
+    </style>
+</head>
+<body>
+    <div class="contenedor">
+        <h2>⭐ TIENDA DE PRESTIGIO</h2>
+        <p class="texto-info">Gasta tus renacimientos en mejoras permanentes</p>
+        <div class="panel">
+            <h3>💰 Ahorro</h3>
+            <p>Devuelve el 2% por nivel al vender mejoras</p>
+            <p>Nivel: <span id="nivel_ahorro">0</span> | Costo: 1 renacimiento</p>
+            <button onclick="mejorarPasiva('ahorro')" class="btn">Mejorar</button>
+        </div>
+        <div class="panel">
+            <h3>🏷️ Descuento</h3>
+            <p>Reduce costos en un 1.5% por nivel</p>
+            <p>Nivel: <span id="nivel_descuento">0</span> | Costo: 2 renacimientos</p>
+            <button onclick="mejorarPasiva('descuento')" class="btn">Mejorar</button>
+        </div>
+        <div class="panel">
+            <h3>🚀 Inicio Mejorado</h3>
+            <p>Empiezas con más dinero al renacer</p>
+            <p>Nivel: <span id="nivel_inicio">0</span> | Costo: 3 renacimientos</p>
+            <button onclick="mejorarPasiva('inicio_mejorado')" class="btn">Mejorar</button>
+        </div>
+        <a href="index.html" class="btn-volver">⬅️ Volver</a>
+    </div>
+    <script src="/js/logica.js"></script>
+</body>
+</html>
