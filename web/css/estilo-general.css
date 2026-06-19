@@ -1,49 +1,7 @@
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Segoe UI', Roboto, sans-serif;
-}
-
-body {
-    background-color: var(--fondo);
-    color: var(--texto);
-    padding: 20px;
-}
-
-.contenedor {
-    max-width: 800px;
-    margin: 0 auto;
-    background-color: var(--secundario);
-    padding: 25px;
-    border-radius: 12px;
-    box-shadow: 0 0 15px rgba(0,0,0,0.4);
-}
-
-h1, h2, h3 {
-    text-align: center;
-    margin-bottom: 25px;
-    color: var(--acento);
-}
-
-.panel-estado, .panel-mejora, .panel-puerta, .panel-lista {
-    background-color: var(--primario);
-    padding: 18px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    border-left: 5px solid var(--acento);
-}
-
-p {
-    margin: 10px 0;
-    font-size: 1.1rem;
-}
-
-input {
-    padding: 10px;
-    width: 60%;
-    border: none;
-    border-radius: 5px;
-    margin-right: 10px;
-    font-size: 1rem;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+body { background: var(--fondo); color: var(--texto); padding: 20px; }
+.contenedor { max-width: 850px; margin: 0 auto; background: var(--panel); padding: 25px; border-radius: 12px; box-shadow: 0 0 20px rgba(0,0,0,0.3); }
+h1, h2 { text-align: center; margin-bottom: 25px; color: var(--acento); }
+.panel-estado, .panel-mejora { background: rgba(59, 130, 246, 0.1); padding: 18px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid var(--acento); }
+p { margin: 10px 0; font-size: 1.1rem; }
+.texto-info { text-align: center; color: #94a3b8; margin-bottom: 20px; }
