@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puertas</title>
+    <link rel="stylesheet" href="css/colores.css">
+    <link rel="stylesheet" href="css/estilo-general.css">
+    <link rel="stylesheet" href="css/botones.css">
+</head>
+<body>
+    <div class="contenedor">
+        <h2>🚪 PUERTAS DE ACCESO</h2>
+
+        <div class="panel-puerta">
+            <p>Ingresa el código numérico para abrir:</p>
+            <input type="text" id="codigo_puerta" placeholder="Ej: 1024">
+            <button onclick="abrirPuerta()" class="btn btn-accion">Abrir</button>
+        </div>
+
+        <div id="lista_puertas" class="panel-lista"></div>
+
+        <a href="index.html" class="btn btn-volver">⬅️ Volver al menú</a>
+    </div>
+
+    <script src="js/logica.js"></script>
+</body>
+</html>
