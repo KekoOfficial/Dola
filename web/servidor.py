@@ -1,7 +1,7 @@
 from http.server import SimpleHTTPRequestHandler, HTTPServer
 import json
 import os
-from urllib.parse import parse_qs, urlparse
+import time
 
 ARCHIVO_DATOS = "datos/progreso.json"
 
@@ -12,13 +12,24 @@ def estado_inicial():
         "nivel_cpu": 1,
         "ganancia_cpu": 0.50,
         "costo_cpu": 150.00,
+        "renacimientos": 0,
+        "bono_renacimiento": 1.00,
         "generadores": {
             "basico": {"cantidad": 0, "ganancia": 0.20, "costo": 200.00},
             "medio": {"cantidad": 0, "ganancia": 1.00, "costo": 1200.00},
-            "avanzado": {"cantidad": 0, "ganancia": 5.00, "costo": 7500.00}
+            "avanzado": {"cantidad": 0, "ganancia": 5.00, "costo": 7500.00},
+            "industrial": {"cantidad": 0, "ganancia": 25.00, "costo": 40000.00}
         },
-        "puertas_abiertas": [],
-        "tiempo_ultima": 0
+        "puertas": {
+            "p1": {"nombre": "Almacén Básico", "abierta": False, "costo": 200, "bono": 0.5},
+            "p2": {"nombre": "Centro de Datos", "abierta": False, "costo": 1000, "bono": 1.5},
+            "p3": {"nombre": "Sala de Procesos", "abierta": False, "costo": 5000, "bono": 4},
+            "p4": {"nombre": "Servidor Principal", "abierta": False, "costo": 25000, "bono": 12},
+            "p5": {"nombre": "Núcleo de Energía", "abierta": False, "costo": 130000, "bono": 45},
+            "p6": {"nombre": "Red Global", "abierta": False, "costo": 700000, "bono": 180},
+            "p7": {"nombre": "Centro Galáctico", "abierta": False, "costo": 4000000, "bono": 800}
+        },
+        "tiempo_ultima": time.time()
     }
 
 def cargar_estado():
@@ -32,15 +43,13 @@ def cargar_estado():
     return estado_inicial()
 
 def guardar_estado(estado):
-    # Redondear todo a 2 decimales para evitar errores
     estado["dinero"] = round(estado["dinero"], 2)
     estado["multiplicador_global"] = round(estado["multiplicador_global"], 2)
     estado["ganancia_cpu"] = round(estado["ganancia_cpu"], 2)
     estado["costo_cpu"] = round(estado["costo_cpu"], 2)
+    estado["bono_renacimiento"] = round(estado["bono_renacimiento"], 2)
     for gen in estado["generadores"].values():
         gen["costo"] = round(gen["costo"], 2)
-        gen["ganancia"] = round(gen["ganancia"], 2)
-    
     with open(ARCHIVO_DATOS, "w", encoding="utf-8") as f:
         json.dump(estado, f, indent=2, ensure_ascii=False)
 
@@ -51,6 +60,17 @@ class Manejador(SimpleHTTPRequestHandler):
             self.send_header("Content-type", "application/json")
             self.end_headers()
             estado = cargar_estado()
+            # Actualizar ganancia antes de enviar
+            ahora = time.time()
+            segundos = ahora - estado["tiempo_ultima"]
+            base = estado["ganancia_cpu"]
+            for gen in estado["generadores"].values():
+                base += gen["cantidad"] * gen["ganancia"]
+            total_mult = estado["multiplicador_global"] * estado["bono_renacimiento"]
+            ganancia = segundos * base * total_mult
+            estado["dinero"] = round(estado["dinero"] + ganancia, 2)
+            estado["tiempo_ultima"] = round(ahora, 3)
+            guardar_estado(estado)
             self.wfile.write(json.dumps(estado).encode("utf-8"))
             return
         return super().do_GET()
@@ -70,10 +90,10 @@ class Manejador(SimpleHTTPRequestHandler):
                     estado["costo_cpu"] = round(estado["costo_cpu"] * 2.0, 2)
 
             elif accion == "comprar_multiplicador":
-                costo = round(80 * estado["multiplicador_global"] * 1.8, 2)
+                costo = round(100 * estado["multiplicador_global"] * 1.9, 2)
                 if estado["dinero"] >= costo:
                     estado["dinero"] = round(estado["dinero"] - costo, 2)
-                    estado["multiplicador_global"] = round(estado["multiplicador_global"] * 1.25, 2)
+                    estado["multiplicador_global"] = round(estado["multiplicador_global"] * 1.3, 2)
 
             elif accion == "comprar_generador":
                 tipo = json.loads(datos)["tipo"]
@@ -81,22 +101,31 @@ class Manejador(SimpleHTTPRequestHandler):
                 if estado["dinero"] >= gen["costo"]:
                     estado["dinero"] = round(estado["dinero"] - gen["costo"], 2)
                     gen["cantidad"] += 1
-                    gen["costo"] = round(gen["costo"] * 1.7, 2)
+                    gen["costo"] = round(gen["costo"] * 1.75, 2)
 
             elif accion == "abrir_puerta":
-                codigo = json.loads(datos)["codigo"]
-                puertas = {
-                    "1024": {"costo": 150.00, "bono": 0.30},
-                    "2048": {"costo": 800.00, "bono": 1.20},
-                    "4096": {"costo": 4500.00, "bono": 3.50},
-                    "8192": {"costo": 22000.00, "bono": 10.00},
-                    "16384": {"costo": 120000.00, "bono": 40.00}
-                }
-                if codigo in puertas and codigo not in estado["puertas_abiertas"]:
-                    if estado["dinero"] >= puertas[codigo]["costo"]:
-                        estado["dinero"] = round(estado["dinero"] - puertas[codigo]["costo"], 2)
-                        estado["puertas_abiertas"].append(codigo)
-                        estado["multiplicador_global"] = round(estado["multiplicador_global"] + puertas[codigo]["bono"], 2)
+                id_puerta = json.loads(datos)["id"]
+                p = estado["puertas"][id_puerta]
+                if not p["abierta"] and estado["dinero"] >= p["costo"]:
+                    estado["dinero"] = round(estado["dinero"] - p["costo"], 2)
+                    p["abierta"] = True
+                    estado["multiplicador_global"] = round(estado["multiplicador_global"] + p["bono"], 2)
+
+            elif accion == "hacer_renacimiento":
+                if estado["nivel_cpu"] >= 5:
+                    estado["renacimientos"] += 1
+                    estado["bono_renacimiento"] = round(estado["bono_renacimiento"] * 1.5, 2)
+                    estado["dinero"] = 100.00
+                    estado["multiplicador_global"] = 1.00
+                    estado["nivel_cpu"] = 1
+                    estado["ganancia_cpu"] = 0.50
+                    estado["costo_cpu"] = 150.00
+                    for gen in estado["generadores"].values():
+                        gen["cantidad"] = 0
+                        gen["costo"] = 200.00 if gen == estado["generadores"]["basico"] else gen["costo"]
+                    for p in estado["puertas"].values():
+                        p["abierta"] = False
+                    estado["tiempo_ultima"] = time.time()
 
             guardar_estado(estado)
             self.send_response(200)
@@ -109,6 +138,6 @@ class Manejador(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     servidor = HTTPServer(("0.0.0.0", 8080), Manejador)
-    print("🌐 Servidor activo en: http://localhost:8080")
-    print("✅ Dinero ya no baja, solo sube")
+    print("🌐 Servidor en http://localhost:8080")
+    print("✅ Progreso se mantiene al cambiar de página")
     servidor.serve_forever()
