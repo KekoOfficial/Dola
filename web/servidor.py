@@ -5,6 +5,9 @@ import time
 
 ARCHIVO_DATOS = "datos/progreso.json"
 
+# --------------------------
+# Estado inicial del juego
+# --------------------------
 def estado_inicial():
     return {
         "dinero": 100.00,
@@ -21,17 +24,20 @@ def estado_inicial():
             "industrial": {"cantidad": 0, "ganancia": 25.00, "costo": 40000.00}
         },
         "puertas": {
-            "p1": {"nombre": "Almacén Básico", "abierta": False, "costo": 200, "bono": 0.5},
-            "p2": {"nombre": "Centro de Datos", "abierta": False, "costo": 1000, "bono": 1.5},
-            "p3": {"nombre": "Sala de Procesos", "abierta": False, "costo": 5000, "bono": 4},
-            "p4": {"nombre": "Servidor Principal", "abierta": False, "costo": 25000, "bono": 12},
-            "p5": {"nombre": "Núcleo de Energía", "abierta": False, "costo": 130000, "bono": 45},
-            "p6": {"nombre": "Red Global", "abierta": False, "costo": 700000, "bono": 180},
-            "p7": {"nombre": "Centro Galáctico", "abierta": False, "costo": 4000000, "bono": 800}
+            "p1": {"nombre": "Almacén Básico", "abierta": False, "costo": 200.00, "bono": 0.50},
+            "p2": {"nombre": "Centro de Datos", "abierta": False, "costo": 1000.00, "bono": 1.50},
+            "p3": {"nombre": "Sala de Procesos", "abierta": False, "costo": 5000.00, "bono": 4.00},
+            "p4": {"nombre": "Servidor Principal", "abierta": False, "costo": 25000.00, "bono": 12.00},
+            "p5": {"nombre": "Núcleo de Energía", "abierta": False, "costo": 130000.00, "bono": 45.00},
+            "p6": {"nombre": "Red Global", "abierta": False, "costo": 700000.00, "bono": 180.00},
+            "p7": {"nombre": "Centro Galáctico", "abierta": False, "costo": 4000000.00, "bono": 800.00}
         },
         "tiempo_ultima": time.time()
     }
 
+# --------------------------
+# Cargar y actualizar estado
+# --------------------------
 def cargar_estado():
     os.makedirs("datos", exist_ok=True)
     estado_defecto = estado_inicial()
@@ -40,21 +46,20 @@ def cargar_estado():
         try:
             with open(ARCHIVO_DATOS, "r", encoding="utf-8") as f:
                 estado_actual = json.load(f)
-            # ✅ Agrega automáticamente cualquier clave que falte
+            # Agregar claves nuevas si faltan
             for clave, valor in estado_defecto.items():
                 if clave not in estado_actual:
                     estado_actual[clave] = valor
-            # Corrige también dentro de generadores y puertas
-            for gen_tipo, datos_gen in estado_defecto["generadores"].items():
-                if gen_tipo not in estado_actual["generadores"]:
-                    estado_actual["generadores"][gen_tipo] = datos_gen
-            for puerta_id, datos_puerta in estado_defecto["puertas"].items():
-                if puerta_id not in estado_actual["puertas"]:
-                    estado_actual["puertas"][puerta_id] = datos_puerta
+            for gen, datos in estado_defecto["generadores"].items():
+                if gen not in estado_actual["generadores"]:
+                    estado_actual["generadores"][gen] = datos
+            for puerta, datos in estado_defecto["puertas"].items():
+                if puerta not in estado_actual["puertas"]:
+                    estado_actual["puertas"][puerta] = datos
             return estado_actual
         except:
             pass
-    return estado_defecto
+    return estado_defecto()
 
 def guardar_estado(estado):
     estado["dinero"] = round(estado["dinero"], 2)
@@ -67,14 +72,30 @@ def guardar_estado(estado):
     with open(ARCHIVO_DATOS, "w", encoding="utf-8") as f:
         json.dump(estado, f, indent=2, ensure_ascii=False)
 
+# --------------------------
+# Servidor con tipos de archivo correctos
+# --------------------------
 class Manejador(SimpleHTTPRequestHandler):
+    # Definir tipos MIME para que cargue bien CSS, JS, etc.
+    extensions_map = {
+        ".html": "text/html; charset=utf-8",
+        ".css": "text/css; charset=utf-8",
+        ".js": "application/javascript; charset=utf-8",
+        ".json": "application/json; charset=utf-8",
+        ".png": "image/png",
+        ".jpg": "image/jpeg",
+        ".gif": "image/gif",
+        "": "text/plain; charset=utf-8"
+    }
+
     def do_GET(self):
+        # API de estado
         if self.path == "/api/estado":
             self.send_response(200)
-            self.send_header("Content-type", "application/json")
+            self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
             estado = cargar_estado()
-            # Actualizar ganancia
+            # Calcular ganancia
             ahora = time.time()
             segundos = ahora - estado["tiempo_ultima"]
             base = estado["ganancia_cpu"]
@@ -87,6 +108,8 @@ class Manejador(SimpleHTTPRequestHandler):
             guardar_estado(estado)
             self.wfile.write(json.dumps(estado).encode("utf-8"))
             return
+
+        # Servir archivos estáticos
         return super().do_GET()
 
     def do_POST(self):
@@ -143,15 +166,20 @@ class Manejador(SimpleHTTPRequestHandler):
 
             guardar_estado(estado)
             self.send_response(200)
-            self.send_header("Content-type", "application/json")
+            self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
             self.wfile.write(json.dumps({"ok": True}).encode("utf-8"))
             return
+
         self.send_response(404)
         self.end_headers()
 
+# --------------------------
+# Iniciar servidor
+# --------------------------
 if __name__ == "__main__":
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
     servidor = HTTPServer(("0.0.0.0", 8080), Manejador)
-    print("🌐 Servidor corriendo en http://localhost:8080")
-    print("✅ Errores de claves corregidos, progreso se mantiene")
+    print("✅ Servidor corriendo en: http://localhost:8080")
+    print("✅ CSS, HTML y JS cargan correctamente")
     servidor.serve_forever()
