@@ -5,16 +5,16 @@ import time
 import shutil
 import math
 
-# 📁 Carpeta de datos única
+# 📁 Configuración
 CARPETA_DATOS = "datos"
 ARCHIVO_PROGRESO = os.path.join(CARPETA_DATOS, "progreso.json")
 ARCHIVO_RESPALDO = os.path.join(CARPETA_DATOS, "respaldo_progreso.json")
+CONTRASEÑA_ADMIN = "111"  # La contraseña que pediste
 
 def crear_estructura():
     os.makedirs(CARPETA_DATOS, exist_ok=True)
 
 def estado_base():
-    """Valores iniciales, usados para fusionar y reiniciar correctamente"""
     return {
         "dinero": 100.00,
         "multiplicador_global": 1.00,
@@ -66,7 +66,6 @@ def estado_base():
     }
 
 def fusionar(datos_actuales, datos_defecto):
-    """Agrega claves nuevas sin borrar lo que ya está guardado"""
     for clave, valor in datos_defecto.items():
         if clave not in datos_actuales:
             datos_actuales[clave] = valor
@@ -83,7 +82,7 @@ def cargar_progreso():
                 guardado = json.load(f)
             estado = fusionar(guardado, estado)
         except Exception as e:
-            print(f"⚠️ Archivo de progreso reiniciado por error: {e}")
+            print(f"⚠️ Archivo reiniciado por error: {e}")
     return estado
 
 def redondear_recursivo(d):
@@ -156,6 +155,115 @@ class Manejador(SimpleHTTPRequestHandler):
             guardar_progreso(estado)
             self.wfile.write(json.dumps(estado).encode("utf-8"))
             return
+
+        # 🆕 Página de Perfil
+        if self.path == "/perfil":
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.end_headers()
+            html = """
+            <!DOCTYPE html>
+            <html lang="es">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Perfil</title>
+                <style>
+                    body { font-family: Arial; background: #1a1a2e; color: white; text-align: center; padding: 20px; }
+                    .btn { padding: 12px 25px; margin: 10px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
+                    .btn-admin { background: #e94560; color: white; }
+                    .btn-volver { background: #0f3460; color: white; }
+                    .panel { background: #16213e; padding: 20px; border-radius: 10px; max-width: 400px; margin: 20px auto; display: none; }
+                    input { padding: 8px; width: 80%; margin: 8px 0; border-radius: 4px; border: none; }
+                </style>
+            </head>
+            <body>
+                <h2>👤 Perfil</h2>
+                <button class="btn btn-admin" onclick="mostrarLogin()">Acceso Administrador</button>
+                <br>
+                <button class="btn btn-volver" onclick="window.location.href='/'">Volver al Menú</button>
+
+                <div id="loginAdmin" class="panel">
+                    <h3>🔑 Ingresar Contraseña</h3>
+                    <input type="password" id="clave" placeholder="Contraseña">
+                    <br>
+                    <button class="btn btn-admin" onclick="verificar()">Entrar</button>
+                    <button class="btn btn-volver" onclick="cerrarLogin()">Cancelar</button>
+                </div>
+
+                <div id="panelAdmin" class="panel">
+                    <h3>⚙️ Panel de Administrador</h3>
+                    <p>Dinero actual: $<span id="dineroActual">0</span></p>
+                    <input type="number" id="montoDinero" placeholder="Agregar/Establecer dinero">
+                    <br>
+                    <button class="btn btn-admin" onclick="modificarDinero('sumar')">Sumar</button>
+                    <button class="btn btn-admin" onclick="modificarDinero('establecer')">Igualar</button>
+                    <br><br>
+                    <p>Nivel CPU actual: <span id="nivelCpuActual">1</span></p>
+                    <input type="number" id="nuevoNivelCpu" placeholder="Nuevo nivel CPU">
+                    <br>
+                    <button class="btn btn-admin" onclick="modificarCpu()">Cambiar Nivel</button>
+                    <br><br>
+                    <button class="btn btn-volver" onclick="guardarYSalir()">Guardar y Salir</button>
+                </div>
+
+                <script>
+                    let estado = {};
+                    async function cargarDatos() {
+                        const res = await fetch('/api/estado');
+                        estado = await res.json();
+                        document.getElementById('dineroActual').textContent = estado.dinero.toFixed(2);
+                        document.getElementById('nivelCpuActual').textContent = estado.nivel_cpu;
+                    }
+                    function mostrarLogin() { document.getElementById('loginAdmin').style.display = 'block'; }
+                    function cerrarLogin() { document.getElementById('loginAdmin').style.display = 'none'; }
+                    async function verificar() {
+                        const clave = document.getElementById('clave').value;
+                        const res = await fetch('/api/verificar-admin', {
+                            method: 'POST',
+                            headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify({clave: clave})
+                        });
+                        const datos = await res.json();
+                        if(datos.ok) {
+                            cerrarLogin();
+                            document.getElementById('panelAdmin').style.display = 'block';
+                            cargarDatos();
+                        } else {
+                            alert('❌ Contraseña incorrecta');
+                        }
+                    }
+                    async function modificarDinero(accion) {
+                        const valor = parseFloat(document.getElementById('montoDinero').value);
+                        if(isNaN(valor)) return alert('Ingresa un número válido');
+                        const res = await fetch('/api/admin-modificar', {
+                            method: 'POST',
+                            headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify({tipo: 'dinero', accion: accion, valor: valor})
+                        });
+                        if(res.ok) cargarDatos();
+                    }
+                    async function modificarCpu() {
+                        const nivel = parseInt(document.getElementById('nuevoNivelCpu').value);
+                        if(isNaN(nivel) || nivel < 1) return alert('Nivel inválido');
+                        const res = await fetch('/api/admin-modificar', {
+                            method: 'POST',
+                            headers: {'Content-Type':'application/json'},
+                            body: JSON.stringify({tipo: 'cpu', valor: nivel})
+                        });
+                        if(res.ok) cargarDatos();
+                    }
+                    function guardarYSalir() {
+                        alert('✅ Cambios guardados');
+                        document.getElementById('panelAdmin').style.display = 'none';
+                    }
+                </script>
+            </body>
+            </html>
+            """
+            self.wfile.write(html.encode("utf-8"))
+            return
+
         return super().do_GET()
 
     def do_POST(self):
@@ -166,10 +274,46 @@ class Manejador(SimpleHTTPRequestHandler):
             estado = cargar_progreso()
             descuento = 1 - estado["mejoras_pasivas"]["descuento"]["efecto"]
 
+            # 🆕 Verificar contraseña de admin
+            if accion == "verificar-admin":
+                if datos.get("clave") == CONTRASEÑA_ADMIN:
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"ok": True}).encode("utf-8"))
+                else:
+                    self.send_response(200)
+                    self.send_header("Content-Type", "application/json; charset=utf-8")
+                    self.end_headers()
+                    self.wfile.write(json.dumps({"ok": False}).encode("utf-8"))
+                return
+
+            # 🆕 Modificaciones de administrador
+            if accion == "admin-modificar":
+                tipo = datos.get("tipo")
+                if tipo == "dinero":
+                    if datos.get("accion") == "sumar":
+                        estado["dinero"] += float(datos.get("valor", 0))
+                    else:
+                        estado["dinero"] = float(datos.get("valor", 0))
+                    estado["dinero"] = round(estado["dinero"], 2)
+                elif tipo == "cpu":
+                    nuevo_nivel = max(1, int(datos.get("valor", 1)))
+                    estado["nivel_cpu"] = nuevo_nivel
+                    estado["ganancia_cpu"] = round(0.5 * (1.6 ** (nuevo_nivel - 1)), 2)
+                    estado["costo_cpu"] = round(150 * (2.0 ** (nuevo_nivel - 1)), 2)
+                guardar_progreso(estado)
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(json.dumps({"ok": True}).encode("utf-8"))
+                return
+
+            # Acciones originales del juego
             if accion == "mejorar_cpu":
                 costo = estado["costo_cpu"] * descuento
                 if estado["dinero"] >= costo:
-                    estado["dinero"] -= costo
+                    estado["dinero"] -= round(costo, 2)
                     estado["nivel_cpu"] += 1
                     estado["ganancia_cpu"] = round(estado["ganancia_cpu"] * 1.6, 2)
                     estado["costo_cpu"] = round(estado["costo_cpu"] * 2.0, 2)
@@ -214,25 +358,20 @@ class Manejador(SimpleHTTPRequestHandler):
                         estado["multiplicador_global"] = round(estado["multiplicador_global"] + puerta["bono"], 2)
                         estado["estadisticas"]["puertas_abiertas"] += 1
 
-            # ✅ RENACIMIENTO CORREGIDO
             elif accion == "hacer_renacimiento":
                 if estado["nivel_cpu"] >= 5:
                     estado["renacimientos"] += 1
                     estado["bono_renacimiento"] = round(estado["bono_renacimiento"] * 1.5, 2)
-                    # Reiniciar valores pero mantener mejoras pasivas, logros y estadísticas
                     estado["dinero"] = estado["mejoras_pasivas"]["inicio_mejorado"]["efecto"]
                     estado["multiplicador_global"] = 1.00
                     estado["nivel_cpu"] = 1
                     estado["ganancia_cpu"] = 0.50
                     estado["costo_cpu"] = 150.00
-                    # Reiniciar generadores a su valor base
                     for tipo, gen in estado["generadores"].items():
                         gen["cantidad"] = 0
                         gen["costo"] = estado_base()["generadores"][tipo]["costo"]
-                    # Reiniciar puertas
                     for puerta in estado["puertas"].values():
                         puerta["abierta"] = False
-                    # Actualizar tiempo
                     estado["tiempo_ultima"] = time.time()
 
             elif accion == "mejorar_pasiva":
@@ -262,6 +401,6 @@ class Manejador(SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     servidor = HTTPServer(("0.0.0.0", 8080), Manejador)
-    print("✅ Servidor corriendo en http://localhost:8080")
-    print("📁 Datos guardados en:", ARCHIVO_PROGRESO)
+    print("✅ Servidor con Perfil y Admin corriendo en http://localhost:8080")
+    print("🔑 Contraseña de administrador: 111")
     servidor.serve_forever()
