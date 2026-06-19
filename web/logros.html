@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logros</title>
+    <style>
+        :root { --fondo:#0f172a; --panel:#1e293b; --texto:#f8fafc; --titulo:#3b82f6; --exito:#16a34a; --alerta:#f59e0b; --gris:#475569; --borde:#334155; }
+        * { margin:0; padding:0; box-sizing:border-box; font-family:Segoe UI, Roboto, Arial, sans-serif; }
+        body { background:var(--fondo); color:var(--texto); padding:20px 15px; }
+        .contenedor { max-width:700px; margin:0 auto; background:var(--panel); padding:25px; border-radius:12px; border:1px solid var(--borde); }
+        h2 { text-align:center; margin-bottom:25px; color:var(--titulo); }
+        .logro { padding:15px; border-radius:8px; margin-bottom:15px; border-left:4px solid; }
+        .desbloqueado { background:rgba(22,163,74,0.1); border-color:var(--exito); }
+        .bloqueado { background:rgba(71,85,105,0.1); border-color:var(--gris); opacity:0.7; }
+        .btn { width:100%; padding:12px; background:var(--gris); color:white; border:none; border-radius:8px; font-weight:bold; text-align:center; text-decoration:none; display:block; margin-top:15px; }
+    </style>
+</head>
+<body>
+    <div class="contenedor">
+        <h2>🏆 LOGROS</h2>
+        <div id="lista_logros"></div>
+        <a href="index.html" class="btn">⬅️ Volver</a>
+    </div>
+    <script src="/js/logica.js"></script>
+</body>
+</html>
