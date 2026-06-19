@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Juego Multiplicadores</title>
     <link rel="stylesheet" href="css/colores.css">
-    <link rel="stylesheet" href="css/estilo-general.css">
+    <link rel="stylesheet" href="css/estilo.css">
     <link rel="stylesheet" href="css/botones.css">
 </head>
 <body>
@@ -14,17 +14,18 @@
 
         <div class="panel-estado">
             <p>💵 Dinero: <span id="dinero">$100.00</span></p>
-            <p>⚡ Multiplicador: x<span id="multiplicador">1.00</span></p>
+            <p>⚡ Multiplicador Total: x<span id="multiplicador">1.00</span></p>
             <p>🖥️ Nivel CPU: <span id="nivel_cpu">1</span></p>
+            <p>🔄 Renacimientos: <span id="renacimientos">0</span> | Bono: x<span id="bono_renacimiento">1.00</span></p>
             <p>📈 Ganancia: $<span id="ganancia_seg">0.50</span>/seg</p>
         </div>
 
         <div class="navegacion">
             <a href="mejoras.html" class="btn">🛠️ Mejoras</a>
             <a href="puertas.html" class="btn">🚪 Puertas</a>
+            <a href="renacimiento.html" class="btn">🔄 Renacimiento</a>
         </div>
     </div>
-
     <script src="js/logica.js"></script>
 </body>
 </html>
