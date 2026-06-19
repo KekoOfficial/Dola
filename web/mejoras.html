@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mejoras</title>
+    <title>Tienda de Mejoras</title>
     <link rel="stylesheet" href="css/colores.css">
     <link rel="stylesheet" href="css/estilo.css">
     <link rel="stylesheet" href="css/botones.css">
@@ -14,30 +14,31 @@
 
         <div class="panel-mejora">
             <h3>🖥️ Mejorar CPU</h3>
-            <p>Aumenta tu ganancia base</p>
-            <p>Costo: $<span id="costo_cpu">150.00</span></p>
+            <p>Aumenta tu ganancia base permanente</p>
+            <p>Costo: $<span id="costo_cpu">0.00</span></p>
             <button onclick="accion('mejorar_cpu')" class="btn btn-accion">Comprar</button>
         </div>
 
         <div class="panel-mejora">
             <h3>⚡ Multiplicador Global</h3>
             <p>Multiplica todas tus ganancias</p>
-            <p>Costo: $<span id="costo_mult">190.00</span></p>
+            <p>Costo: $<span id="costo_mult">0.00</span></p>
             <button onclick="accion('comprar_multiplicador')" class="btn btn-accion">Comprar</button>
         </div>
 
         <div class="panel-mejora">
             <h3>🔌 Generadores Automáticos</h3>
-            <p>Básico: $<span id="costo_basico">200.00</span> | Cant: <span id="cant_basico">0</span></p>
+
+            <p>Básico → $0.20/seg | Costo: $<span id="costo_basico">0.00</span> | Cantidad: <span id="cant_basico">0</span></p>
             <button onclick="comprarGenerador('basico')" class="btn btn-accion">Comprar</button>
 
-            <p>Medio: $<span id="costo_medio">1200.00</span> | Cant: <span id="cant_medio">0</span></p>
+            <p>Medio → $1.00/seg | Costo: $<span id="costo_medio">0.00</span> | Cantidad: <span id="cant_medio">0</span></p>
             <button onclick="comprarGenerador('medio')" class="btn btn-accion">Comprar</button>
 
-            <p>Avanzado: $<span id="costo_avanzado">7500.00</span> | Cant: <span id="cant_avanzado">0</span></p>
+            <p>Avanzado → $5.00/seg | Costo: $<span id="costo_avanzado">0.00</span> | Cantidad: <span id="cant_avanzado">0</span></p>
             <button onclick="comprarGenerador('avanzado')" class="btn btn-accion">Comprar</button>
 
-            <p>Industrial: $<span id="costo_industrial">40000.00</span> | Cant: <span id="cant_industrial">0</span></p>
+            <p>Industrial → $25.00/seg | Costo: $<span id="costo_industrial">0.00</span> | Cantidad: <span id="cant_industrial">0</span></p>
             <button onclick="comprarGenerador('industrial')" class="btn btn-accion">Comprar</button>
         </div>
 
