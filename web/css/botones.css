@@ -1,16 +1,45 @@
 .btn {
     display: inline-block;
-    padding: 12px 20px;
+    padding: 12px 22px;
     border: none;
-    border-radius: 6px;
+    border-radius: 8px;
     font-weight: bold;
     text-decoration: none;
     cursor: pointer;
-    transition: 0.2s;
-    margin: 8px;
+    transition: all 0.2s ease;
+    margin: 8px 5px;
     font-size: 1rem;
+    text-align: center;
+    min-width: 120px;
 }
-.btn:hover { transform: scale(1.03); box-shadow: 0 0 10px rgba(59,130,246,0.4); }
-.btn-accion { background: var(--acento); color: white; }
-.btn-volver { background: #475569; color: white; }
-.navegacion { display: flex; flex-wrap: wrap; justify-content: center; gap: 15px; margin-top: 30px; }
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.btn-accion {
+    background-color: var(--acento);
+    color: white;
+}
+
+.btn-accion:hover {
+    background-color: #1d4ed8;
+}
+
+.btn-volver {
+    background-color: var(--gris);
+    color: white;
+}
+
+.btn-volver:hover {
+    background-color: #334155;
+}
+
+.navegacion {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 30px;
+}
