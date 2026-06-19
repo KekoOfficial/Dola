@@ -3,7 +3,6 @@ import json
 import os
 import time
 import shutil
-import math
 
 # 📁 Configuración
 CARPETA_DATOS = "datos"
@@ -156,7 +155,7 @@ class Manejador(SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(estado).encode("utf-8"))
             return
 
-        # 🆕 Página de Perfil
+        # 🆕 Página de Perfil y Administrador (solo dinero)
         if self.path == "/perfil":
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -173,19 +172,19 @@ class Manejador(SimpleHTTPRequestHandler):
                     .btn { padding: 12px 25px; margin: 10px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
                     .btn-admin { background: #e94560; color: white; }
                     .btn-volver { background: #0f3460; color: white; }
-                    .panel { background: #16213e; padding: 20px; border-radius: 10px; max-width: 400px; margin: 20px auto; display: none; }
-                    input { padding: 8px; width: 80%; margin: 8px 0; border-radius: 4px; border: none; }
+                    .panel { background: #16213e; padding: 25px; border-radius: 10px; max-width: 420px; margin: 20px auto; display: none; }
+                    input { padding: 10px; width: 85%; margin: 10px 0; border-radius: 5px; border: none; font-size: 16px; }
                 </style>
             </head>
             <body>
                 <h2>👤 Perfil</h2>
-                <button class="btn btn-admin" onclick="mostrarLogin()">Acceso Administrador</button>
-                <br>
-                <button class="btn btn-volver" onclick="window.location.href='/'">Volver al Menú</button>
+                <button class="btn btn-admin" onclick="mostrarLogin()">🔑 Acceso Administrador</button>
+                <br><br>
+                <button class="btn btn-volver" onclick="window.location.href='/'">⬅️ Volver al Menú Principal</button>
 
                 <div id="loginAdmin" class="panel">
-                    <h3>🔑 Ingresar Contraseña</h3>
-                    <input type="password" id="clave" placeholder="Contraseña">
+                    <h3>Ingresar Contraseña</h3>
+                    <input type="password" id="clave" placeholder="Escribir contraseña">
                     <br>
                     <button class="btn btn-admin" onclick="verificar()">Entrar</button>
                     <button class="btn btn-volver" onclick="cerrarLogin()">Cancelar</button>
@@ -193,39 +192,31 @@ class Manejador(SimpleHTTPRequestHandler):
 
                 <div id="panelAdmin" class="panel">
                     <h3>⚙️ Panel de Administrador</h3>
-                    <p>Dinero actual: $<span id="dineroActual">0</span></p>
-                    <input type="number" id="montoDinero" placeholder="Agregar/Establecer dinero">
+                    <p>Dinero actual: <strong>$<span id="dineroActual">0.00</span></strong></p>
+                    <input type="number" step="0.01" id="nuevoDinero" placeholder="Poner cantidad nueva (ej: 0, 1, 1000000)">
                     <br>
-                    <button class="btn btn-admin" onclick="modificarDinero('sumar')">Sumar</button>
-                    <button class="btn btn-admin" onclick="modificarDinero('establecer')">Igualar</button>
+                    <button class="btn btn-admin" onclick="guardarDinero()">💾 Guardar Cantidad</button>
                     <br><br>
-                    <p>Nivel CPU actual: <span id="nivelCpuActual">1</span></p>
-                    <input type="number" id="nuevoNivelCpu" placeholder="Nuevo nivel CPU">
-                    <br>
-                    <button class="btn btn-admin" onclick="modificarCpu()">Cambiar Nivel</button>
-                    <br><br>
-                    <button class="btn btn-volver" onclick="guardarYSalir()">Guardar y Salir</button>
+                    <button class="btn btn-volver" onclick="salir()">🚪 Guardar y Salir</button>
                 </div>
 
                 <script>
-                    let estado = {};
                     async function cargarDatos() {
                         const res = await fetch('/api/estado');
-                        estado = await res.json();
-                        document.getElementById('dineroActual').textContent = estado.dinero.toFixed(2);
-                        document.getElementById('nivelCpuActual').textContent = estado.nivel_cpu;
+                        const datos = await res.json();
+                        document.getElementById('dineroActual').textContent = datos.dinero.toFixed(2);
                     }
                     function mostrarLogin() { document.getElementById('loginAdmin').style.display = 'block'; }
                     function cerrarLogin() { document.getElementById('loginAdmin').style.display = 'none'; }
                     async function verificar() {
-                        const clave = document.getElementById('clave').value;
+                        const clave = document.getElementById('clave').value.trim();
                         const res = await fetch('/api/verificar-admin', {
                             method: 'POST',
                             headers: {'Content-Type':'application/json'},
                             body: JSON.stringify({clave: clave})
                         });
-                        const datos = await res.json();
-                        if(datos.ok) {
+                        const respuesta = await res.json();
+                        if(respuesta.ok) {
                             cerrarLogin();
                             document.getElementById('panelAdmin').style.display = 'block';
                             cargarDatos();
@@ -233,29 +224,25 @@ class Manejador(SimpleHTTPRequestHandler):
                             alert('❌ Contraseña incorrecta');
                         }
                     }
-                    async function modificarDinero(accion) {
-                        const valor = parseFloat(document.getElementById('montoDinero').value);
-                        if(isNaN(valor)) return alert('Ingresa un número válido');
-                        const res = await fetch('/api/admin-modificar', {
+                    async function guardarDinero() {
+                        const monto = parseFloat(document.getElementById('nuevoDinero').value);
+                        if(isNaN(monto) || monto < 0) {
+                            alert('⚠️ Escribe un número válido (no negativo)');
+                            return;
+                        }
+                        const res = await fetch('/api/admin-cambiar-dinero', {
                             method: 'POST',
                             headers: {'Content-Type':'application/json'},
-                            body: JSON.stringify({tipo: 'dinero', accion: accion, valor: valor})
+                            body: JSON.stringify({nuevo_valor: monto})
                         });
-                        if(res.ok) cargarDatos();
+                        if(res.ok) {
+                            alert('✅ Dinero actualizado correctamente');
+                            cargarDatos();
+                        }
                     }
-                    async function modificarCpu() {
-                        const nivel = parseInt(document.getElementById('nuevoNivelCpu').value);
-                        if(isNaN(nivel) || nivel < 1) return alert('Nivel inválido');
-                        const res = await fetch('/api/admin-modificar', {
-                            method: 'POST',
-                            headers: {'Content-Type':'application/json'},
-                            body: JSON.stringify({tipo: 'cpu', valor: nivel})
-                        });
-                        if(res.ok) cargarDatos();
-                    }
-                    function guardarYSalir() {
-                        alert('✅ Cambios guardados');
-                        document.getElementById('panelAdmin').style.display = 'none';
+                    function salir() {
+                        alert('✅ Cambios guardados. Volviendo al menú...');
+                        window.location.href = '/';
                     }
                 </script>
             </body>
@@ -274,7 +261,7 @@ class Manejador(SimpleHTTPRequestHandler):
             estado = cargar_progreso()
             descuento = 1 - estado["mejoras_pasivas"]["descuento"]["efecto"]
 
-            # 🆕 Verificar contraseña de admin
+            # Verificar contraseña
             if accion == "verificar-admin":
                 if datos.get("clave") == CONTRASEÑA_ADMIN:
                     self.send_response(200)
@@ -288,20 +275,10 @@ class Manejador(SimpleHTTPRequestHandler):
                     self.wfile.write(json.dumps({"ok": False}).encode("utf-8"))
                 return
 
-            # 🆕 Modificaciones de administrador
-            if accion == "admin-modificar":
-                tipo = datos.get("tipo")
-                if tipo == "dinero":
-                    if datos.get("accion") == "sumar":
-                        estado["dinero"] += float(datos.get("valor", 0))
-                    else:
-                        estado["dinero"] = float(datos.get("valor", 0))
-                    estado["dinero"] = round(estado["dinero"], 2)
-                elif tipo == "cpu":
-                    nuevo_nivel = max(1, int(datos.get("valor", 1)))
-                    estado["nivel_cpu"] = nuevo_nivel
-                    estado["ganancia_cpu"] = round(0.5 * (1.6 ** (nuevo_nivel - 1)), 2)
-                    estado["costo_cpu"] = round(150 * (2.0 ** (nuevo_nivel - 1)), 2)
+            # Cambiar SOLO el dinero
+            if accion == "admin-cambiar-dinero":
+                monto = max(0, float(datos.get("nuevo_valor", 0)))
+                estado["dinero"] = round(monto, 2)
                 guardar_progreso(estado)
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
@@ -309,7 +286,7 @@ class Manejador(SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({"ok": True}).encode("utf-8"))
                 return
 
-            # Acciones originales del juego
+            # Funciones originales del juego
             if accion == "mejorar_cpu":
                 costo = estado["costo_cpu"] * descuento
                 if estado["dinero"] >= costo:
@@ -401,6 +378,6 @@ class Manejador(SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     servidor = HTTPServer(("0.0.0.0", 8080), Manejador)
-    print("✅ Servidor con Perfil y Admin corriendo en http://localhost:8080")
-    print("🔑 Contraseña de administrador: 111")
+    print("✅ Servidor corriendo en http://localhost:8080")
+    print("🔑 Contraseña Admin: 111")
     servidor.serve_forever()
