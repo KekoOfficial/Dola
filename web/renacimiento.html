@@ -4,9 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sistema de Renacimiento</title>
-    <link rel="stylesheet" href="/css/colores.css">
-    <link rel="stylesheet" href="/css/estilo.css">
-    <link rel="stylesheet" href="/css/botones.css">
+    <style>
+        :root {
+            --fondo: #0f172a;
+            --panel: #1e293b;
+            --texto: #f8fafc;
+            --titulo: #3b82f6;
+            --acento: #2563eb;
+            --exito: #16a34a;
+            --alerta: #f59e0b;
+            --gris: #475569;
+            --borde: #334155;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--fondo);
+            color: var(--texto);
+            padding: 20px 15px;
+            line-height: 1.6;
+        }
+
+        .contenedor {
+            max-width: 700px;
+            margin: 0 auto;
+            background-color: var(--panel);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            border: 1px solid var(--borde);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: var(--titulo);
+            font-size: 1.8rem;
+        }
+
+        .panel-mejora {
+            background-color: rgba(59, 130, 246, 0.08);
+            padding: 18px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid var(--acento);
+        }
+
+        p {
+            margin: 12px 0;
+            font-size: 1.1rem;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin: 15px 0;
+            font-size: 1.1rem;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+
+        .btn-accion {
+            background-color: var(--acento);
+            color: white;
+        }
+
+        .btn-volver {
+            background-color: var(--gris);
+            color: white;
+        }
+    </style>
 </head>
 <body>
     <div class="contenedor">
@@ -24,6 +106,7 @@
 
         <a href="index.html" class="btn btn-volver">⬅️ Volver al menú</a>
     </div>
+
     <script src="/js/logica.js"></script>
 </body>
 </html>
