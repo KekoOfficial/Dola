@@ -13,10 +13,13 @@
         button { padding: 10px 18px; border: none; border-radius: 6px; background: #2563eb; color: white; cursor: pointer; font-size: 1em; margin: 5px; }
         button:hover { background: #1d4ed8; }
         button:disabled { background: #475569; cursor: not-allowed; }
+        .btn-max { background: #9333ea; }
+        .btn-max:hover { background: #7e22ce; }
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
         .logro { padding: 10px; border-radius: 6px; margin: 5px 0; }
         .desbloqueado { background: #064e3b; border-left: 4px solid #4ade80; }
         .bloqueado { background: #332a22; border-left: 4px solid #fbbf24; opacity: 0.7; }
+        .fila-cpu { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
     </style>
 </head>
 <body>
@@ -30,58 +33,74 @@
         <p>Renacimientos: <span id="renacimientos" class="valor">0</span></p>
     </div>
 
-    <!-- 🛠️ Mejoras y Generadores -->
+    <!-- 🛠️ Mejoras de CPU con opción de compra máxima -->
     <div class="panel">
-        <h2>🛠️ Mejoras</h2>
-        <p>Costo de mejora CPU: <span id="costo_cpu">$0.00</span>
-        <button onclick="mejorarCPU()">Mejorar CPU</button></p>
+        <h2>🖥️ Mejoras de CPU</h2>
+        <div class="fila-cpu">
+            <div>
+                <p>Costo por 1 nivel: <span id="costo_cpu" class="valor">$0.00</span></p>
+                <p>Podés comprar hasta: <span id="cant_max_cpu" class="valor">0</span> niveles</p>
+                <p>Costo total máximo: <span id="costo_total_cpu" class="valor">$0.00</span></p>
+            </div>
+            <div>
+                <button onclick="comprar1CPU()">🔹 Comprar 1 CPU</button>
+                <button class="btn-max" onclick="comprarMaxCPU()">🔺 Comprar MÁXIMO</button>
+            </div>
+        </div>
+    </div>
 
-        <p>Costo de multiplicador: <span id="costo_mult">$0.00</span>
-        <button onclick="comprarMultiplicador()">Comprar</button></p>
+    <!-- 🛠️ Multiplicadores -->
+    <div class="panel">
+        <h2>⚡ Multiplicadores</h2>
+        <p>Costo: <span id="costo_mult" class="valor">$0.00</span></p>
+        <button onclick="comprarMultiplicador()">Comprar</button>
+    </div>
 
-        <h3>Generadores</h3>
+    <!-- 🛠️ Generadores -->
+    <div class="panel">
+        <h2>🏭 Generadores</h2>
         <div class="grid">
             <div>
                 <p>Básico | Cantidad: <span id="cant_basico">0</span></p>
                 <p>Costo: <span id="costo_basico">$0.00</span></p>
-                <button onclick="comprarGenerador('basico')">Comprar 1</button>
-                <button onclick="comprarMaxGenerador('basico')">Máximo</button>
+                <button onclick="comprarGenerador('basico')">1 Unidad</button>
+                <button class="btn-max" onclick="comprarMaxGenerador('basico')">Máximo</button>
             </div>
             <div>
                 <p>Medio | Cantidad: <span id="cant_medio">0</span></p>
                 <p>Costo: <span id="costo_medio">$0.00</span></p>
-                <button onclick="comprarGenerador('medio')">Comprar 1</button>
-                <button onclick="comprarMaxGenerador('medio')">Máximo</button>
+                <button onclick="comprarGenerador('medio')">1 Unidad</button>
+                <button class="btn-max" onclick="comprarMaxGenerador('medio')">Máximo</button>
             </div>
             <div>
                 <p>Avanzado | Cantidad: <span id="cant_avanzado">0</span></p>
                 <p>Costo: <span id="costo_avanzado">$0.00</span></p>
-                <button onclick="comprarGenerador('avanzado')">Comprar 1</button>
-                <button onclick="comprarMaxGenerador('avanzado')">Máximo</button>
+                <button onclick="comprarGenerador('avanzado')">1 Unidad</button>
+                <button class="btn-max" onclick="comprarMaxGenerador('avanzado')">Máximo</button>
             </div>
             <div>
                 <p>Industrial | Cantidad: <span id="cant_industrial">0</span></p>
                 <p>Costo: <span id="costo_industrial">$0.00</span></p>
-                <button onclick="comprarGenerador('industrial')">Comprar 1</button>
-                <button onclick="comprarMaxGenerador('industrial')">Máximo</button>
+                <button onclick="comprarGenerador('industrial')">1 Unidad</button>
+                <button class="btn-max" onclick="comprarMaxGenerador('industrial')">Máximo</button>
             </div>
             <div>
                 <p>Nuclear | Cantidad: <span id="cant_nuclear">0</span></p>
                 <p>Costo: <span id="costo_nuclear">$0.00</span></p>
-                <button onclick="comprarGenerador('nuclear')">Comprar 1</button>
-                <button onclick="comprarMaxGenerador('nuclear')">Máximo</button>
+                <button onclick="comprarGenerador('nuclear')">1 Unidad</button>
+                <button class="btn-max" onclick="comprarMaxGenerador('nuclear')">Máximo</button>
             </div>
             <div>
                 <p>Cuántico | Cantidad: <span id="cant_cuantico">0</span></p>
                 <p>Costo: <span id="costo_cuantico">$0.00</span></p>
-                <button onclick="comprarGenerador('cuantico')">Comprar 1</button>
-                <button onclick="comprarMaxGenerador('cuantico')">Máximo</button>
+                <button onclick="comprarGenerador('cuantico')">1 Unidad</button>
+                <button class="btn-max" onclick="comprarMaxGenerador('cuantico')">Máximo</button>
             </div>
             <div>
                 <p>Galáctico | Cantidad: <span id="cant_galactico">0</span></p>
                 <p>Costo: <span id="costo_galactico">$0.00</span></p>
-                <button onclick="comprarGenerador('galactico')">Comprar 1</button>
-                <button onclick="comprarMaxGenerador('galactico')">Máximo</button>
+                <button onclick="comprarGenerador('galactico')">1 Unidad</button>
+                <button class="btn-max" onclick="comprarMaxGenerador('galactico')">Máximo</button>
             </div>
         </div>
     </div>
@@ -134,15 +153,8 @@
         <button onclick="irAPerfil()">Ir a Perfil y Panel de Administrador</button>
     </div>
 
-    <!-- 🔗 Enlaces a archivos JS -->
-    <script type="module" src="js/utilidades.js"></script>
-    <script type="module" src="js/mejoras.js"></script>
-    <script type="module" src="js/puertas.js"></script>
-    <script type="module" src="js/renacimiento.js"></script>
-    <script type="module" src="js/estadisticas.js"></script>
-    <script type="module" src="js/logros.js"></script>
-    <script type="module" src="js/prestigio.js"></script>
-    <script type="module" src="js/perfil.js"></script>
+    <!-- 🔗 Enlace al JS -->
+    <script type="module" src="js/servidor.js"></script>
 
     <script>
         function irAPerfil() {
