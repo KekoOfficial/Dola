@@ -8,7 +8,7 @@ import shutil
 CARPETA_DATOS = "datos"
 ARCHIVO_PROGRESO = os.path.join(CARPETA_DATOS, "progreso.json")
 ARCHIVO_RESPALDO = os.path.join(CARPETA_DATOS, "respaldo_progreso.json")
-CONTRASEÑA_ADMIN = "111"  # Contraseña de acceso al panel
+CONTRASEÑA_ADMIN = "111"
 
 def crear_estructura():
     os.makedirs(CARPETA_DATOS, exist_ok=True)
@@ -87,7 +87,7 @@ def cargar_progreso():
 def redondear_recursivo(d):
     for k, v in d.items():
         if isinstance(v, float):
-            d[k] = round(v, 2)
+            d[k] = round(v, 4)
         elif isinstance(v, dict):
             redondear_recursivo(v)
     return d
@@ -103,7 +103,7 @@ def calcular_bono_logros(estado):
     for logro in estado["logros"].values():
         if logro["desbloqueado"]:
             multiplicador *= logro["bono"]
-    return round(multiplicador, 2)
+    return round(multiplicador, 4)
 
 def verificar_logros(estado):
     if not estado["logros"]["primeros_1k"]["desbloqueado"] and estado["dinero"] >= 1000:
@@ -136,6 +136,7 @@ class Manejador(SimpleHTTPRequestHandler):
             segundos = ahora - estado["tiempo_ultima"]
             estado["estadisticas"]["tiempo_jugado"] += segundos
 
+            # ✅ LÓGICA DE GANANCIA ARREGLADA
             base = estado["ganancia_cpu"]
             for gen in estado["generadores"].values():
                 base += gen["cantidad"] * gen["ganancia"]
@@ -144,10 +145,12 @@ class Manejador(SimpleHTTPRequestHandler):
             total_mult = estado["multiplicador_global"] * estado["bono_renacimiento"] * bono_logros
             ganancia = segundos * base * total_mult
 
-            estado["dinero"] += ganancia
-            estado["estadisticas"]["dinero_total_ganado"] += ganancia
-            if (base * total_mult) > estado["estadisticas"]["ganancia_maxima"]:
-                estado["estadisticas"]["ganancia_maxima"] = round(base * total_mult, 2)
+            estado["dinero"] = round(estado["dinero"] + ganancia, 4)
+            estado["estadisticas"]["dinero_total_ganado"] = round(estado["estadisticas"]["dinero_total_ganado"] + ganancia, 4)
+
+            ganancia_actual = round(base * total_mult, 4)
+            if ganancia_actual > estado["estadisticas"]["ganancia_maxima"]:
+                estado["estadisticas"]["ganancia_maxima"] = ganancia_actual
 
             verificar_logros(estado)
             estado["tiempo_ultima"] = round(ahora, 3)
@@ -192,11 +195,11 @@ class Manejador(SimpleHTTPRequestHandler):
                 <div id="panelAdmin" class="panel">
                     <h3>⚙️ Panel de Administrador</h3>
                     <p>Dinero actual: <strong>$<span id="dineroActual">0.00</span></strong></p>
-                    <input type="number" step="0.01" id="nuevoDinero" placeholder="Cantidad nueva (ej: 0, 1, 1000000)">
+                    <input type="number" step="0.01" id="nuevoDinero" placeholder="Cantidad nueva">
                     <br>
                     <button class="btn btn-admin" onclick="guardarDinero()">💾 Guardar</button>
                     <br><br>
-                    <button class="btn btn-volver" onclick="salir()">🚪 Guardar y Salir</button>
+                    <button class="btn btn-volver" onclick="salir()">🚪 Volver</button>
                 </div>
 
                 <script>
@@ -219,29 +222,20 @@ class Manejador(SimpleHTTPRequestHandler):
                             cerrarLogin();
                             document.getElementById('panelAdmin').style.display = 'block';
                             cargarDatos();
-                        } else {
-                            alert('❌ Contraseña incorrecta');
-                        }
+                        } else alert('❌ Contraseña incorrecta');
                     }
                     async function guardarDinero() {
                         const monto = parseFloat(document.getElementById('nuevoDinero').value);
-                        if(isNaN(monto) || monto < 0) {
-                            alert('⚠️ Escribe un número válido');
-                            return;
-                        }
-                        const res = await fetch('/api/admin-cambiar-dinero', {
+                        if(isNaN(monto) || monto < 0) return alert('⚠️ Número inválido');
+                        await fetch('/api/admin-cambiar-dinero', {
                             method: 'POST',
                             headers: {'Content-Type':'application/json'},
                             body: JSON.stringify({nuevo_valor: monto})
                         });
-                        if(res.ok) {
-                            alert('✅ Dinero actualizado');
-                            cargarDatos();
-                        }
+                        alert('✅ Dinero actualizado');
+                        cargarDatos();
                     }
-                    function salir() {
-                        window.location.href = '/';
-                    }
+                    function salir() { window.location.href = '/'; }
                 </script>
             </body>
             </html>
@@ -260,120 +254,122 @@ class Manejador(SimpleHTTPRequestHandler):
             descuento = 1 - estado["mejoras_pasivas"]["descuento"]["efecto"]
 
             if accion == "verificar-admin":
-                if datos.get("clave") == CONTRASEÑA_ADMIN:
-                    self.send_response(200)
-                    self.send_header("Content-Type", "application/json; charset=utf-8")
-                    self.end_headers()
-                    self.wfile.write(json.dumps({"ok": True}).encode("utf-8"))
-                else:
-                    self.send_response(200)
-                    self.send_header("Content-Type", "application/json; charset=utf-8")
-                    self.end_headers()
-                    self.wfile.write(json.dumps({"ok": False}).encode("utf-8"))
-                return
-
-            if accion == "admin-cambiar-dinero":
-                monto = max(0, float(datos.get("nuevo_valor", 0)))
-                estado["dinero"] = round(monto, 2)
-                guardar_progreso(estado)
+                ok = (datos.get("clave") == CONTRASEÑA_ADMIN)
                 self.send_response(200)
                 self.send_header("Content-Type", "application/json; charset=utf-8")
                 self.end_headers()
-                self.wfile.write(json.dumps({"ok": True}).encode("utf-8"))
+                self.wfile.write(json.dumps({"ok": ok}).encode("utf-8"))
+                return
+
+            if accion == "admin-cambiar-dinero":
+                estado["dinero"] = max(0, round(float(datos.get("nuevo_valor", 0)), 4))
+                guardar_progreso(estado)
+                self.send_response(200)
+                self.end_headers()
                 return
 
             if accion == "mejorar_cpu":
-                costo = estado["costo_cpu"] * descuento
+                costo = round(estado["costo_cpu"] * descuento, 4)
                 if estado["dinero"] >= costo:
-                    estado["dinero"] -= round(costo, 2)
+                    estado["dinero"] -= costo
                     estado["nivel_cpu"] += 1
-                    estado["ganancia_cpu"] = round(estado["ganancia_cpu"] * 1.6, 2)
-                    estado["costo_cpu"] = round(estado["costo_cpu"] * 2.0, 2)
+                    estado["ganancia_cpu"] = round(estado["ganancia_cpu"] * 1.6, 4)
+                    estado["costo_cpu"] = round(estado["costo_cpu"] * 2.0, 4)
                     estado["estadisticas"]["mejoras_cpu"] += 1
 
+            elif accion == "comprar_max_cpu":
+                cantidad = max(1, int(datos.get("cantidad", 1)))
+                costo_actual = estado["costo_cpu"]
+                for _ in range(cantidad):
+                    costo = round(costo_actual * descuento, 4)
+                    if estado["dinero"] < costo:
+                        break
+                    estado["dinero"] -= costo
+                    estado["nivel_cpu"] += 1
+                    estado["ganancia_cpu"] = round(estado["ganancia_cpu"] * 1.6, 4)
+                    costo_actual = round(costo_actual * 2.0, 4)
+                    estado["estadisticas"]["mejoras_cpu"] += 1
+                estado["costo_cpu"] = costo_actual
+
             elif accion == "comprar_multiplicador":
-                costo = 100 * estado["multiplicador_global"] * 1.9 * descuento
+                costo = round(100 * estado["multiplicador_global"] * 1.9 * descuento, 4)
                 if estado["dinero"] >= costo:
-                    estado["dinero"] -= round(costo, 2)
-                    estado["multiplicador_global"] = round(estado["multiplicador_global"] * 1.3, 2)
+                    estado["dinero"] -= costo
+                    estado["multiplicador_global"] = round(estado["multiplicador_global"] * 1.3, 4)
 
             elif accion == "comprar_generador":
                 tipo = datos.get("tipo")
                 if tipo in estado["generadores"]:
                     gen = estado["generadores"][tipo]
-                    costo = gen["costo"] * descuento
+                    costo = round(gen["costo"] * descuento, 4)
                     if estado["dinero"] >= costo:
-                        estado["dinero"] -= round(costo, 2)
+                        estado["dinero"] -= costo
                         gen["cantidad"] += 1
-                        gen["costo"] = round(gen["costo"] * 1.75, 2)
+                        gen["costo"] = round(gen["costo"] * 1.75, 4)
                         estado["estadisticas"]["generadores_comprados"] += 1
 
             elif accion == "comprar_max_generador":
                 tipo = datos.get("tipo")
                 if tipo in estado["generadores"]:
                     gen = estado["generadores"][tipo]
-                    while estado["dinero"] >= (gen["costo"] * descuento):
-                        costo = round(gen["costo"] * descuento, 2)
+                    while True:
+                        costo = round(gen["costo"] * descuento, 4)
+                        if estado["dinero"] < costo:
+                            break
                         estado["dinero"] -= costo
                         gen["cantidad"] += 1
-                        gen["costo"] = round(gen["costo"] * 1.75, 2)
+                        gen["costo"] = round(gen["costo"] * 1.75, 4)
                         estado["estadisticas"]["generadores_comprados"] += 1
 
             elif accion == "abrir_puerta":
                 id_puerta = datos.get("id")
                 if id_puerta in estado["puertas"]:
-                    puerta = estado["puertas"][id_puerta]
-                    costo = puerta["costo"] * descuento
-                    if not puerta["abierta"] and estado["dinero"] >= costo:
-                        estado["dinero"] -= round(costo, 2)
-                        puerta["abierta"] = True
-                        estado["multiplicador_global"] = round(estado["multiplicador_global"] + puerta["bono"], 2)
+                    p = estado["puertas"][id_puerta]
+                    costo = round(p["costo"] * descuento, 4)
+                    if not p["abierta"] and estado["dinero"] >= costo:
+                        estado["dinero"] -= costo
+                        p["abierta"] = True
+                        estado["multiplicador_global"] = round(estado["multiplicador_global"] + p["bono"], 4)
                         estado["estadisticas"]["puertas_abiertas"] += 1
 
-            # ✅ NUEVA LÓGICA DE RENACIMIENTO: cada 5 niveles = 1 renacimiento
             elif accion == "hacer_renacimiento":
-                cantidad = int(datos.get("cantidad", 1))
-                cantidad = max(1, cantidad)
-
+                cantidad = max(1, int(datos.get("cantidad", 1)))
                 for _ in range(cantidad):
                     estado["renacimientos"] += 1
-                    estado["bono_renacimiento"] = round(estado["bono_renacimiento"] * 1.5, 2)
+                    estado["bono_renacimiento"] = round(estado["bono_renacimiento"] * 1.5, 4)
 
-                # Reinicio del progreso
-                estado["dinero"] = estado["mejoras_pasivas"]["inicio_mejorado"]["efecto"]
+                estado["dinero"] = round(estado["mejoras_pasivas"]["inicio_mejorado"]["efecto"], 4)
                 estado["multiplicador_global"] = 1.00
                 estado["nivel_cpu"] = 1
                 estado["ganancia_cpu"] = 0.50
                 estado["costo_cpu"] = 150.00
 
-                for tipo, gen in estado["generadores"].items():
-                    gen["cantidad"] = 0
-                    gen["costo"] = estado_base()["generadores"][tipo]["costo"]
+                for g in estado["generadores"].values():
+                    g["cantidad"] = 0
+                    g["costo"] = estado_base()["generadores"][g["tipo"]]["costo"] if "tipo" in g else estado_base()["generadores"][list(estado["generadores"].keys())[0]]["costo"]
 
-                for puerta in estado["puertas"].values():
-                    puerta["abierta"] = False
+                for p in estado["puertas"].values():
+                    p["abierta"] = False
 
                 estado["tiempo_ultima"] = time.time()
 
             elif accion == "mejorar_pasiva":
                 tipo = datos.get("tipo")
                 if tipo in estado["mejoras_pasivas"]:
-                    mejora = estado["mejoras_pasivas"][tipo]
-                    if estado["renacimientos"] >= mejora["costo"]:
-                        estado["renacimientos"] -= mejora["costo"]
-                        mejora["nivel"] += 1
+                    m = estado["mejoras_pasivas"][tipo]
+                    if estado["renacimientos"] >= m["costo"]:
+                        estado["renacimientos"] -= m["costo"]
+                        m["nivel"] += 1
                         if tipo == "ahorro":
-                            mejora["efecto"] = round(mejora["nivel"] * 0.02, 2)
+                            m["efecto"] = round(m["nivel"] * 0.02, 3)
                         elif tipo == "descuento":
-                            mejora["efecto"] = round(mejora["nivel"] * 0.015, 3)
+                            m["efecto"] = round(m["nivel"] * 0.015, 3)
                         elif tipo == "inicio_mejorado":
-                            mejora["efecto"] = round(100 * (1.2 ** mejora["nivel"]), 2)
+                            m["efecto"] = round(100 * (1.2 ** m["nivel"]), 2)
 
             guardar_progreso(estado)
             self.send_response(200)
-            self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
-            self.wfile.write(json.dumps({"ok": True}).encode("utf-8"))
             return
 
         self.send_response(404)
