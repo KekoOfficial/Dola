@@ -3,301 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multiplicadores de Dinero 🚀</title>
+    <title>Multiplicadores de Dinero</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
-        }
-
-        body {
-            background: #0f172a;
-            color: #f1f5f9;
-            padding: 16px;
-            max-width: 720px;
-            margin: 0 auto;
-            line-height: 1.5;
-        }
-
-        h1 {
-            text-align: center;
-            margin: 20px 0;
-            color: #38bdf8;
-            font-size: 1.8em;
-            font-weight: 700;
-        }
-
-        h2 {
-            color: #7dd3fc;
-            font-size: 1.3em;
-            margin-bottom: 12px;
-            border-bottom: 1px solid #1e40af;
-            padding-bottom: 6px;
-        }
-
-        .panel {
-            background: #1e293b;
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 18px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
-        }
-
-        .valor {
-            font-weight: bold;
-            font-size: 1.1em;
-            color: #4ade80;
-        }
-
-        p {
-            margin: 8px 0;
-            font-size: 1em;
-        }
-
-        button {
-            padding: 10px 14px;
-            border: none;
-            border-radius: 8px;
-            font-size: 0.95em;
-            font-weight: 500;
-            cursor: pointer;
-            margin: 6px 4px;
-            transition: background 0.2s ease;
-        }
-
-        .btn-normal {
-            background: #2563eb;
-            color: white;
-        }
-        .btn-normal:hover {
-            background: #1d4ed8;
-        }
-
-        .btn-max {
-            background: #9333ea;
-            color: white;
-        }
-        .btn-max:hover {
-            background: #7e22ce;
-        }
-
-        button:disabled {
-            background: #475569;
-            cursor: not-allowed;
-            opacity: 0.6;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 12px;
-            margin-top: 12px;
-        }
-
-        .logro {
-            padding: 10px;
-            border-radius: 6px;
-            margin: 6px 0;
-        }
-        .desbloqueado {
-            background: #064e3b;
-            border-left: 4px solid #4ade80;
-        }
-        .bloqueado {
-            background: #332a22;
-            border-left: 4px solid #fbbf24;
-            opacity: 0.7;
-        }
+        * {margin:0; padding:0; box-sizing:border-box; font-family:Arial;}
+        body {background:#0f172a; color:#f8fafc; padding:20px; max-width:600px; margin:0 auto;}
+        .cabecera {background:#1e293b; padding:15px; border-radius:10px; margin-bottom:20px; text-align:center;}
+        .dinero {font-size:28px; font-weight:bold; color:#4ade80; margin:10px 0;}
+        .ganancia {font-size:16px; color:#94a3b8;}
+        .seccion {background:#1e293b; padding:15px; border-radius:10px; margin-bottom:15px;}
+        button {width:100%; padding:12px; border:none; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer; margin:8px 0;}
+        .btn-verde {background:#166534; color:white;}
+        .btn-azul {background:#1e40af; color:white;}
+        .btn-rojo {background:#991b1b; color:white;}
+        input {width:100%; padding:10px; margin:8px 0; border-radius:6px; border:none; background:#334155; color:white;}
     </style>
 </head>
 <body>
-
-    <h1>💰 Multiplicadores de Dinero</h1>
-
-    <!-- 📊 Estado General -->
-    <div class="panel">
-        <h2>Estado General</h2>
-        <p>Dinero: <span id="dinero" class="valor">$0.00</span></p>
-        <p>Ganancia por segundo: <span id="ganancia_seg" class="valor">$0.00/seg</span></p>
-        <p>Multiplicador total: <span id="multiplicador" class="valor">x1.00</span></p>
-        <p>Nivel de CPU: <span id="nivel_cpu" class="valor">1</span></p>
-        <p>Renacimientos: <span id="renacimientos" class="valor">0</span></p>
-        <p>Bono renacimiento: <span id="bono_renacimiento" class="valor">x1.00</span></p>
+    <div class="cabecera">
+        <h2>💸 Juego Multiplicadores</h2>
+        <div class="dinero" id="dinero">$0.00</div>
+        <div class="ganancia">Ganancia: <span id="ganancia">0.00</span> $/seg</div>
     </div>
 
-    <!-- 🖥️ Mejoras de CPU -->
-    <div class="panel">
-        <h2>🖥️ Mejorar CPU</h2>
-        <p>Costo por 1 nivel: <span id="costo_cpu" class="valor">$0.00</span></p>
-        <p>Podés comprar hasta: <span id="cant_max_cpu" class="valor">0</span></p>
-        <p>Costo total: <span id="costo_total_cpu" class="valor">$0.00</span></p>
-        <br>
-        <button class="btn-normal" onclick="comprar1CPU()">🔹 Comprar 1</button>
-        <button class="btn-max" onclick="comprarMaxCPU()">🔺 Comprar MÁXIMO</button>
+    <div class="seccion">
+        <h3>🖥️ Mejorar CPU</h3>
+        <p>Nivel: <span id="nivel_cpu">1</span> | Costo: $<span id="costo_cpu">150.00</span></p>
+        <button class="btn-verde" onclick="mejorarCPU()">Comprar Mejora</button>
     </div>
 
-    <!-- ⚡ Multiplicadores -->
-    <div class="panel">
-        <h2>⚡ Multiplicadores</h2>
-        <p>Costo por 1: <span id="costo_mult" class="valor">$0.00</span></p>
-        <p>Podés comprar hasta: <span id="cant_max_mult" class="valor">0</span></p>
-        <p>Costo total: <span id="costo_total_mult" class="valor">$0.00</span></p>
-        <br>
-        <button class="btn-normal" onclick="comprar1Multiplicador()">🔹 Comprar 1</button>
-        <button class="btn-max" onclick="comprarMaxMultiplicadores()">🔺 Comprar MÁXIMO</button>
+    <div class="seccion">
+        <h3>👤 Panel Administrador</h3>
+        <input type="password" id="clave_admin" placeholder="Contraseña (111)">
+        <input type="number" step="0.01" id="monto_admin" placeholder="Nueva cantidad de dinero">
+        <button class="btn-rojo" onclick="cambiarDinero()">Actualizar Dinero</button>
     </div>
 
-    <!-- 🏭 Generadores -->
-    <div class="panel">
-        <h2>🏭 Generadores</h2>
-        <div class="grid">
-            <div>
-                <p>Básico</p>
-                <p>Cant: <span id="cant_basico">0</span></p>
-                <p>Costo: <span id="costo_basico" class="valor">$0.00</span></p>
-                <button class="btn-normal" onclick="comprarGenerador('basico')">1</button>
-                <button class="btn-max" onclick="comprarMaxGenerador('basico')">Máx</button>
-            </div>
-            <div>
-                <p>Medio</p>
-                <p>Cant: <span id="cant_medio">0</span></p>
-                <p>Costo: <span id="costo_medio" class="valor">$0.00</span></p>
-                <button class="btn-normal" onclick="comprarGenerador('medio')">1</button>
-                <button class="btn-max" onclick="comprarMaxGenerador('medio')">Máx</button>
-            </div>
-            <div>
-                <p>Avanzado</p>
-                <p>Cant: <span id="cant_avanzado">0</span></p>
-                <p>Costo: <span id="costo_avanzado" class="valor">$0.00</span></p>
-                <button class="btn-normal" onclick="comprarGenerador('avanzado')">1</button>
-                <button class="btn-max" onclick="comprarMaxGenerador('avanzado')">Máx</button>
-            </div>
-            <div>
-                <p>Industrial</p>
-                <p>Cant: <span id="cant_industrial">0</span></p>
-                <p>Costo: <span id="costo_industrial" class="valor">$0.00</span></p>
-                <button class="btn-normal" onclick="comprarGenerador('industrial')">1</button>
-                <button class="btn-max" onclick="comprarMaxGenerador('industrial')">Máx</button>
-            </div>
-            <div>
-                <p>Nuclear</p>
-                <p>Cant: <span id="cant_nuclear">0</span></p>
-                <p>Costo: <span id="costo_nuclear" class="valor">$0.00</span></p>
-                <button class="btn-normal" onclick="comprarGenerador('nuclear')">1</button>
-                <button class="btn-max" onclick="comprarMaxGenerador('nuclear')">Máx</button>
-            </div>
-            <div>
-                <p>Cuántico</p>
-                <p>Cant: <span id="cant_cuantico">0</span></p>
-                <p>Costo: <span id="costo_cuantico" class="valor">$0.00</span></p>
-                <button class="btn-normal" onclick="comprarGenerador('cuantico')">1</button>
-                <button class="btn-max" onclick="comprarMaxGenerador('cuantico')">Máx</button>
-            </div>
-            <div>
-                <p>Galáctico</p>
-                <p>Cant: <span id="cant_galactico">0</span></p>
-                <p>Costo: <span id="costo_galactico" class="valor">$0.00</span></p>
-                <button class="btn-normal" onclick="comprarGenerador('galactico')">1</button>
-                <button class="btn-max" onclick="comprarMaxGenerador('galactico')">Máx</button>
-            </div>
-        </div>
-    </div>
+    <script>
+        // ACTUALIZACIÓN AUTOMÁTICA CADA SEGUNDO
+        async function actualizarDatos() {
+            try {
+                const res = await fetch("/api/estado");
+                const datos = await res.json();
+                document.getElementById("dinero").textContent = `$${datos.dinero.toFixed(2)}`;
+                document.getElementById("nivel_cpu").textContent = datos.nivel_cpu;
+                document.getElementById("costo_cpu").textContent = datos.costo_cpu.toFixed(2);
+                
+                // Calcular ganancia por segundo
+                let base = datos.ganancia_cpu;
+                for (const g of Object.values(datos.generadores)) base += g.cantidad * g.ganancia;
+                let bono = datos.multiplicador_global * datos.bono_renacimiento;
+                for (const l of Object.values(datos.logros)) if (l.desbloqueado) bono *= l.bono;
+                document.getElementById("ganancia").textContent = (base * bono).toFixed(2);
+            } catch (e) {
+                console.log("Error al actualizar:", e);
+            }
+        }
 
-    <!-- 🚪 Puertas -->
-    <div class="panel">
-        <h2>🚪 Puertas</h2>
-        <div id="lista_puertas"></div>
-    </div>
+        // Acciones
+        async function mejorarCPU() {
+            await fetch("/api/mejorar_cpu", {method:"POST"});
+            actualizarDatos();
+        }
 
-    <!-- 🔄 Renacimiento -->
-    <div class="panel">
-        <h2>🔄 Renacimiento</h2>
-        <p id="info_renacer">Necesitás nivel 5+ de CPU para renacer</p>
-        <br>
-        <button class="btn-normal" id="btn_renacer" onclick="hacerRenacimiento()" disabled>Renacer ahora</button>
-    </div>
+        async function cambiarDinero() {
+            const clave = document.getElementById("clave_admin").value.trim();
+            const valor = parseFloat(document.getElementById("monto_admin").value) || 0;
+            await fetch("/api/admin", {
+                method:"POST",
+                headers:{"Content-Type":"application/json"},
+                body: JSON.stringify({clave, valor})
+            });
+            actualizarDatos();
+        }
 
-    <!-- ⭐ Mejoras Pasivas -->
-    <div class="panel">
-        <h2>⭐ Mejoras Pasivas</h2>
-        <p>Ahorro de costo | Nivel: <span id="nivel_ahorro">0</span>
-        <button class="btn-normal" onclick="mejorarPasiva('ahorro')">Mejorar</button></p>
-        <p>Descuento en compras | Nivel: <span id="nivel_descuento">0</span>
-        <button class="btn-normal" onclick="mejorarPasiva('descuento')">Mejorar</button></p>
-        <p>Inicio mejorado | Nivel: <span id="nivel_inicio">0</span>
-        <button class="btn-normal" onclick="mejorarPasiva('inicio_mejorado')">Mejorar</button></p>
-    </div>
-
-    <!-- 🏆 Logros -->
-    <div class="panel">
-        <h2>🏆 Logros</h2>
-        <div id="lista_logros"></div>
-    </div>
-
-    <!-- 📊 Estadísticas -->
-    <div class="panel">
-        <h2>📊 Estadísticas</h2>
-        <p>Dinero total ganado: <span id="total_ganado" class="valor">$0.00</span></p>
-        <p>Mejoras de CPU: <span id="mejoras_cpu">0</span></p>
-        <p>Generadores comprados: <span id="generadores_totales">0</span></p>
-        <p>Puertas abiertas: <span id="puertas_totales">0</span></p>
-        <p>Tiempo jugado: <span id="tiempo_jugado">0h 0m</span></p>
-        <p>Ganancia máxima: <span id="ganancia_max" class="valor">$0.00/seg</span></p>
-    </div>
-
-    <!-- 👤 Perfil / Admin -->
-    <div class="panel">
-        <h2>👤 Opciones</h2>
-        <button class="btn-normal" onclick="irAPerfil()">Ir a Perfil / Administrador</button>
-    </div>
-
-    <!-- 📁 Enlaces a todos los archivos JS -->
-    <script type="module" src="js/utilidades.js"></script>
-    <script type="module" src="js/estado.js"></script>
-    <script type="module" src="js/cpu.js"></script>
-    <script type="module" src="js/multiplicadores.js"></script>
-    <script type="module" src="js/generadores.js"></script>
-    <script type="module" src="js/puertas.js"></script>
-    <script type="module" src="js/renacimiento.js"></script>
-    <script type="module" src="js/mejoras_pasivas.js"></script>
-    <script type="module" src="js/interfaz.js"></script>
-
-    <script type="module">
-        import { cargarEstado } from "./js/estado.js";
-        import { actualizarInterfaz } from "./js/interfaz.js";
-        import { comprar1CPU, comprarMaxCPU } from "./js/cpu.js";
-        import { comprar1Multiplicador, comprarMaxMultiplicadores } from "./js/multiplicadores.js";
-        import { comprarGenerador, comprarMaxGenerador } from "./js/generadores.js";
-        import { abrirPuerta } from "./js/puertas.js";
-        import { hacerRenacimiento } from "./js/renacimiento.js";
-        import { mejorarPasiva } from "./js/mejoras_pasivas.js";
-
-        // Exponer funciones para que los botones funcionen
-        window.comprar1CPU = comprar1CPU;
-        window.comprarMaxCPU = comprarMaxCPU;
-        window.comprar1Multiplicador = comprar1Multiplicador;
-        window.comprarMaxMultiplicadores = comprarMaxMultiplicadores;
-        window.comprarGenerador = comprarGenerador;
-        window.comprarMaxGenerador = comprarMaxGenerador;
-        window.abrirPuerta = abrirPuerta;
-        window.hacerRenacimiento = hacerRenacimiento;
-        window.mejorarPasiva = mejorarPasiva;
-        window.irAPerfil = () => window.location.href = "/perfil";
-
-        // Actualización automática cada segundo
-        setInterval(async () => {
-            await cargarEstado();
-            actualizarInterfaz();
-        }, 1000);
-
-        // Cargar al inicio
-        window.onload = async () => {
-            await cargarEstado();
-            actualizarInterfaz();
-        };
+        // Iniciar actualización cada segundo
+        actualizarDatos();
+        setInterval(actualizarDatos, 1000);
     </script>
-
 </body>
 </html>
