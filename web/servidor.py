@@ -8,7 +8,7 @@ import shutil
 CARPETA_DATOS = "datos"
 ARCHIVO_PROGRESO = os.path.join(CARPETA_DATOS, "progreso.json")
 ARCHIVO_RESPALDO = os.path.join(CARPETA_DATOS, "respaldo_progreso.json")
-CONTRASEÑA_ADMIN = "111"  # La contraseña que pediste
+CONTRASEÑA_ADMIN = "111"  # Contraseña de acceso al panel
 
 def crear_estructura():
     os.makedirs(CARPETA_DATOS, exist_ok=True)
@@ -34,9 +34,9 @@ def estado_base():
         "logros": {
             "primeros_1k": {"desbloqueado": False, "bono": 1.10, "descripcion": "Alcanzar $1.000 → +10% ganancia"},
             "3_puertas": {"desbloqueado": False, "bono": 1.20, "descripcion": "Abrir 3 puertas → +20% ganancia"},
-            "2_renacimientos": {"desbloqueado": False, "bono": 1.30, "descripcion": "Renacer 2 veces → +30% ganancia"},
+            "2_renacimientos": {"desbloqueado": False, "bono": 1.30, "descripcion": "Tener 2 renacimientos → +30% ganancia"},
             "primer_millon": {"desbloqueado": False, "bono": 1.50, "descripcion": "Alcanzar $1.000.000 → +50% ganancia"},
-            "10_renacimientos": {"desbloqueado": False, "bono": 2.00, "descripcion": "Renacer 10 veces → Doble ganancia"}
+            "10_renacimientos": {"desbloqueado": False, "bono": 2.00, "descripcion": "Tener 10 renacimientos → Doble ganancia"}
         },
         "mejoras_pasivas": {
             "ahorro": {"nivel": 0, "efecto": 0.00, "costo": 1},
@@ -155,7 +155,6 @@ class Manejador(SimpleHTTPRequestHandler):
             self.wfile.write(json.dumps(estado).encode("utf-8"))
             return
 
-        # 🆕 Página de Perfil y Administrador (solo dinero)
         if self.path == "/perfil":
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
@@ -193,9 +192,9 @@ class Manejador(SimpleHTTPRequestHandler):
                 <div id="panelAdmin" class="panel">
                     <h3>⚙️ Panel de Administrador</h3>
                     <p>Dinero actual: <strong>$<span id="dineroActual">0.00</span></strong></p>
-                    <input type="number" step="0.01" id="nuevoDinero" placeholder="Poner cantidad nueva (ej: 0, 1, 1000000)">
+                    <input type="number" step="0.01" id="nuevoDinero" placeholder="Cantidad nueva (ej: 0, 1, 1000000)">
                     <br>
-                    <button class="btn btn-admin" onclick="guardarDinero()">💾 Guardar Cantidad</button>
+                    <button class="btn btn-admin" onclick="guardarDinero()">💾 Guardar</button>
                     <br><br>
                     <button class="btn btn-volver" onclick="salir()">🚪 Guardar y Salir</button>
                 </div>
@@ -227,7 +226,7 @@ class Manejador(SimpleHTTPRequestHandler):
                     async function guardarDinero() {
                         const monto = parseFloat(document.getElementById('nuevoDinero').value);
                         if(isNaN(monto) || monto < 0) {
-                            alert('⚠️ Escribe un número válido (no negativo)');
+                            alert('⚠️ Escribe un número válido');
                             return;
                         }
                         const res = await fetch('/api/admin-cambiar-dinero', {
@@ -236,12 +235,11 @@ class Manejador(SimpleHTTPRequestHandler):
                             body: JSON.stringify({nuevo_valor: monto})
                         });
                         if(res.ok) {
-                            alert('✅ Dinero actualizado correctamente');
+                            alert('✅ Dinero actualizado');
                             cargarDatos();
                         }
                     }
                     function salir() {
-                        alert('✅ Cambios guardados. Volviendo al menú...');
                         window.location.href = '/';
                     }
                 </script>
@@ -261,7 +259,6 @@ class Manejador(SimpleHTTPRequestHandler):
             estado = cargar_progreso()
             descuento = 1 - estado["mejoras_pasivas"]["descuento"]["efecto"]
 
-            # Verificar contraseña
             if accion == "verificar-admin":
                 if datos.get("clave") == CONTRASEÑA_ADMIN:
                     self.send_response(200)
@@ -275,7 +272,6 @@ class Manejador(SimpleHTTPRequestHandler):
                     self.wfile.write(json.dumps({"ok": False}).encode("utf-8"))
                 return
 
-            # Cambiar SOLO el dinero
             if accion == "admin-cambiar-dinero":
                 monto = max(0, float(datos.get("nuevo_valor", 0)))
                 estado["dinero"] = round(monto, 2)
@@ -286,7 +282,6 @@ class Manejador(SimpleHTTPRequestHandler):
                 self.wfile.write(json.dumps({"ok": True}).encode("utf-8"))
                 return
 
-            # Funciones originales del juego
             if accion == "mejorar_cpu":
                 costo = estado["costo_cpu"] * descuento
                 if estado["dinero"] >= costo:
@@ -335,21 +330,30 @@ class Manejador(SimpleHTTPRequestHandler):
                         estado["multiplicador_global"] = round(estado["multiplicador_global"] + puerta["bono"], 2)
                         estado["estadisticas"]["puertas_abiertas"] += 1
 
+            # ✅ NUEVA LÓGICA DE RENACIMIENTO: cada 5 niveles = 1 renacimiento
             elif accion == "hacer_renacimiento":
-                if estado["nivel_cpu"] >= 5:
+                cantidad = int(datos.get("cantidad", 1))
+                cantidad = max(1, cantidad)
+
+                for _ in range(cantidad):
                     estado["renacimientos"] += 1
                     estado["bono_renacimiento"] = round(estado["bono_renacimiento"] * 1.5, 2)
-                    estado["dinero"] = estado["mejoras_pasivas"]["inicio_mejorado"]["efecto"]
-                    estado["multiplicador_global"] = 1.00
-                    estado["nivel_cpu"] = 1
-                    estado["ganancia_cpu"] = 0.50
-                    estado["costo_cpu"] = 150.00
-                    for tipo, gen in estado["generadores"].items():
-                        gen["cantidad"] = 0
-                        gen["costo"] = estado_base()["generadores"][tipo]["costo"]
-                    for puerta in estado["puertas"].values():
-                        puerta["abierta"] = False
-                    estado["tiempo_ultima"] = time.time()
+
+                # Reinicio del progreso
+                estado["dinero"] = estado["mejoras_pasivas"]["inicio_mejorado"]["efecto"]
+                estado["multiplicador_global"] = 1.00
+                estado["nivel_cpu"] = 1
+                estado["ganancia_cpu"] = 0.50
+                estado["costo_cpu"] = 150.00
+
+                for tipo, gen in estado["generadores"].items():
+                    gen["cantidad"] = 0
+                    gen["costo"] = estado_base()["generadores"][tipo]["costo"]
+
+                for puerta in estado["puertas"].values():
+                    puerta["abierta"] = False
+
+                estado["tiempo_ultima"] = time.time()
 
             elif accion == "mejorar_pasiva":
                 tipo = datos.get("tipo")
