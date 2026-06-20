@@ -7,7 +7,7 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
         body { background: #0f172a; color: #f8fafc; padding: 20px; max-width: 1000px; margin: 0 auto; }
-        h1, h2 { text-align: center; margin: 20px 0; color: #38bdf8; }
+        h1, h2, h3 { text-align: center; margin: 20px 0; color: #38bdf8; }
         .panel { background: #1e293b; border-radius: 12px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
         .valor { font-size: 1.2em; font-weight: bold; color: #4ade80; }
         button { padding: 10px 18px; border: none; border-radius: 6px; background: #2563eb; color: white; cursor: pointer; font-size: 1em; margin: 5px; }
@@ -21,63 +21,66 @@
 </head>
 <body>
 
-    <!-- Panel Principal -->
+    <!-- 📊 Panel Principal -->
     <div class="panel">
         <h2>💰 Dinero: <span id="dinero" class="valor">$0.00</span></h2>
-        <p>Ganancia: <span id="ganancia_seg" class="valor">$0.00/seg</span></p>
+        <p>Ganancia por segundo: <span id="ganancia_seg" class="valor">$0.00/seg</span></p>
         <p>Multiplicador total: <span id="multiplicador" class="valor">x1.00</span></p>
-        <p>Nivel CPU: <span id="nivel_cpu" class="valor">1</span></p>
+        <p>Nivel de CPU: <span id="nivel_cpu" class="valor">1</span></p>
         <p>Renacimientos: <span id="renacimientos" class="valor">0</span></p>
     </div>
 
-    <!-- 🛠️ Mejoras -->
+    <!-- 🛠️ Mejoras y Generadores -->
     <div class="panel">
         <h2>🛠️ Mejoras</h2>
-        <p>Costo CPU: <span id="costo_cpu">$0.00</span> <button onclick="mejorarCPU()">Mejorar</button></p>
-        <p>Costo Multiplicador: <span id="costo_mult">$0.00</span> <button onclick="comprarMultiplicador()">Comprar</button></p>
+        <p>Costo de mejora CPU: <span id="costo_cpu">$0.00</span>
+        <button onclick="mejorarCPU()">Mejorar CPU</button></p>
+
+        <p>Costo de multiplicador: <span id="costo_mult">$0.00</span>
+        <button onclick="comprarMultiplicador()">Comprar</button></p>
 
         <h3>Generadores</h3>
         <div class="grid">
             <div>
-                <p>Básico: <span id="cant_basico">0</span></p>
+                <p>Básico | Cantidad: <span id="cant_basico">0</span></p>
                 <p>Costo: <span id="costo_basico">$0.00</span></p>
-                <button onclick="comprarGenerador('basico')">Comprar</button>
+                <button onclick="comprarGenerador('basico')">Comprar 1</button>
                 <button onclick="comprarMaxGenerador('basico')">Máximo</button>
             </div>
             <div>
-                <p>Medio: <span id="cant_medio">0</span></p>
+                <p>Medio | Cantidad: <span id="cant_medio">0</span></p>
                 <p>Costo: <span id="costo_medio">$0.00</span></p>
-                <button onclick="comprarGenerador('medio')">Comprar</button>
+                <button onclick="comprarGenerador('medio')">Comprar 1</button>
                 <button onclick="comprarMaxGenerador('medio')">Máximo</button>
             </div>
             <div>
-                <p>Avanzado: <span id="cant_avanzado">0</span></p>
+                <p>Avanzado | Cantidad: <span id="cant_avanzado">0</span></p>
                 <p>Costo: <span id="costo_avanzado">$0.00</span></p>
-                <button onclick="comprarGenerador('avanzado')">Comprar</button>
+                <button onclick="comprarGenerador('avanzado')">Comprar 1</button>
                 <button onclick="comprarMaxGenerador('avanzado')">Máximo</button>
             </div>
             <div>
-                <p>Industrial: <span id="cant_industrial">0</span></p>
+                <p>Industrial | Cantidad: <span id="cant_industrial">0</span></p>
                 <p>Costo: <span id="costo_industrial">$0.00</span></p>
-                <button onclick="comprarGenerador('industrial')">Comprar</button>
+                <button onclick="comprarGenerador('industrial')">Comprar 1</button>
                 <button onclick="comprarMaxGenerador('industrial')">Máximo</button>
             </div>
             <div>
-                <p>Nuclear: <span id="cant_nuclear">0</span></p>
+                <p>Nuclear | Cantidad: <span id="cant_nuclear">0</span></p>
                 <p>Costo: <span id="costo_nuclear">$0.00</span></p>
-                <button onclick="comprarGenerador('nuclear')">Comprar</button>
+                <button onclick="comprarGenerador('nuclear')">Comprar 1</button>
                 <button onclick="comprarMaxGenerador('nuclear')">Máximo</button>
             </div>
             <div>
-                <p>Cuántico: <span id="cant_cuantico">0</span></p>
+                <p>Cuántico | Cantidad: <span id="cant_cuantico">0</span></p>
                 <p>Costo: <span id="costo_cuantico">$0.00</span></p>
-                <button onclick="comprarGenerador('cuantico')">Comprar</button>
+                <button onclick="comprarGenerador('cuantico')">Comprar 1</button>
                 <button onclick="comprarMaxGenerador('cuantico')">Máximo</button>
             </div>
             <div>
-                <p>Galáctico: <span id="cant_galactico">0</span></p>
+                <p>Galáctico | Cantidad: <span id="cant_galactico">0</span></p>
                 <p>Costo: <span id="costo_galactico">$0.00</span></p>
-                <button onclick="comprarGenerador('galactico')">Comprar</button>
+                <button onclick="comprarGenerador('galactico')">Comprar 1</button>
                 <button onclick="comprarMaxGenerador('galactico')">Máximo</button>
             </div>
         </div>
@@ -93,16 +96,19 @@
     <div class="panel">
         <h2>🔄 Renacimiento</h2>
         <p>Bono acumulado: <span id="bono_renacimiento" class="valor">x1.00</span></p>
-        <p id="info_renacer">Necesitas nivel CPU ≥ 5</p>
-        <button id="btn_renacer" onclick="hacerRenacimiento()">Renacer</button>
+        <p id="info_renacer">Requisito: Nivel de CPU ≥ 5</p>
+        <button id="btn_renacer" onclick="hacerRenacimiento()">Renacer ahora</button>
     </div>
 
-    <!-- ⭐ Prestigio -->
+    <!-- ⭐ Mejoras Pasivas / Prestigio -->
     <div class="panel">
         <h2>⭐ Mejoras Pasivas</h2>
-        <p>Ahorro: Nivel <span id="nivel_ahorro">0</span> <button onclick="mejorarPasiva('ahorro')">Mejorar</button></p>
-        <p>Descuento: Nivel <span id="nivel_descuento">0</span> <button onclick="mejorarPasiva('descuento')">Mejorar</button></p>
-        <p>Inicio Mejorado: Nivel <span id="nivel_inicio">0</span> <button onclick="mejorarPasiva('inicio_mejorado')">Mejorar</button></p>
+        <p>Ahorro | Nivel: <span id="nivel_ahorro">0</span>
+        <button onclick="mejorarPasiva('ahorro')">Mejorar</button></p>
+        <p>Descuento | Nivel: <span id="nivel_descuento">0</span>
+        <button onclick="mejorarPasiva('descuento')">Mejorar</button></p>
+        <p>Inicio Mejorado | Nivel: <span id="nivel_inicio">0</span>
+        <button onclick="mejorarPasiva('inicio_mejorado')">Mejorar</button></p>
     </div>
 
     <!-- 🏆 Logros -->
@@ -115,20 +121,20 @@
     <div class="panel">
         <h2>📊 Estadísticas</h2>
         <p>Dinero total ganado: <span id="total_ganado" class="valor">$0.00</span></p>
-        <p>Mejoras de CPU: <span id="mejoras_cpu">0</span></p>
+        <p>Mejoras de CPU realizadas: <span id="mejoras_cpu">0</span></p>
         <p>Generadores comprados: <span id="generadores_totales">0</span></p>
         <p>Puertas abiertas: <span id="puertas_totales">0</span></p>
-        <p>Tiempo jugado: <span id="tiempo_jugado">0h 0m</span></p>
-        <p>Ganancia máxima: <span id="ganancia_max" class="valor">$0.00</span></p>
+        <p>Tiempo total jugado: <span id="tiempo_jugado">0h 0m</span></p>
+        <p>Ganancia máxima por segundo: <span id="ganancia_max" class="valor">$0.00</span></p>
     </div>
 
-    <!-- 👤 Perfil -->
+    <!-- 👤 Perfil y Administrador -->
     <div class="panel">
         <h2>👤 Perfil</h2>
-        <button onclick="irAPerfil()">Ir a Perfil y Administrador</button>
+        <button onclick="irAPerfil()">Ir a Perfil y Panel de Administrador</button>
     </div>
 
-    <!-- 👇 SCRIPTS AQUÍ -->
+    <!-- 🔗 Enlaces a archivos JS -->
     <script type="module" src="js/utilidades.js"></script>
     <script type="module" src="js/mejoras.js"></script>
     <script type="module" src="js/puertas.js"></script>
@@ -139,7 +145,9 @@
     <script type="module" src="js/perfil.js"></script>
 
     <script>
-        function irAPerfil() { window.location.href = "/perfil"; }
+        function irAPerfil() {
+            window.location.href = "/perfil";
+        }
     </script>
 
 </body>
