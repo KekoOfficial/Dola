@@ -2,28 +2,13 @@ import { estado, aplicarDescuento, formatearMonto, cargarEstado } from "./utilid
 
 export function mostrarMejoras() {
     if (!estado) return;
-    const costoCpu = aplicarDescuento(estado.costo_cpu || 0);
-    const costoMult = aplicarDescuento(100 * (estado.multiplicador_global || 1) * 1.9);
+    document.getElementById("costo_cpu").textContent = formatearMonto(aplicarDescuento(estado.costo_cpu || 0));
+    document.getElementById("costo_mult").textContent = formatearMonto(aplicarDescuento(100 * (estado.multiplicador_global || 1) * 1.9));
 
-    if (document.getElementById("costo_cpu")) {
-        document.getElementById("costo_cpu").textContent = formatearMonto(costoCpu);
-        document.getElementById("btn_mejorar_cpu").disabled = estado.dinero < costoCpu;
-    }
-    if (document.getElementById("costo_mult")) {
-        document.getElementById("costo_mult").textContent = formatearMonto(costoMult);
-        document.getElementById("btn_mult").disabled = estado.dinero < costoMult;
-    }
-
-    // Generadores
     const gen = estado.generadores || {};
     for (const [tipo, datos] of Object.entries(gen)) {
-        const costo = aplicarDescuento(datos.costo || 0);
-        const idCosto = `costo_${tipo}`;
-        const idCant = `cant_${tipo}`;
-        const idBtn = `btn_${tipo}`;
-        if (document.getElementById(idCosto)) document.getElementById(idCosto).textContent = formatearMonto(costo);
-        if (document.getElementById(idCant)) document.getElementById(idCant).textContent = datos.cantidad || 0;
-        if (document.getElementById(idBtn)) document.getElementById(idBtn).disabled = estado.dinero < costo;
+        document.getElementById(`costo_${tipo}`).textContent = formatearMonto(aplicarDescuento(datos.costo || 0));
+        document.getElementById(`cant_${tipo}`).textContent = datos.cantidad || 0;
     }
 }
 
@@ -54,3 +39,8 @@ export async function comprarMaxGenerador(tipo) {
     });
     cargarEstado();
 }
+
+window.mejorarCPU = mejorarCPU;
+window.comprarMultiplicador = comprarMultiplicador;
+window.comprarGenerador = comprarGenerador;
+window.comprarMaxGenerador = comprarMaxGenerador;
