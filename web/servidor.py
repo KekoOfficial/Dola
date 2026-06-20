@@ -4,7 +4,6 @@ import os
 import time
 import shutil
 
-# 📁 Configuración
 CARPETA_DATOS = "datos"
 ARCHIVO_PROGRESO = os.path.join(CARPETA_DATOS, "progreso.json")
 ARCHIVO_RESPALDO = os.path.join(CARPETA_DATOS, "respaldo_progreso.json")
@@ -136,7 +135,6 @@ class Manejador(SimpleHTTPRequestHandler):
             segundos = ahora - estado["tiempo_ultima"]
             estado["estadisticas"]["tiempo_jugado"] += segundos
 
-            # ✅ LÓGICA DE GANANCIA ARREGLADA
             base = estado["ganancia_cpu"]
             for gen in estado["generadores"].values():
                 base += gen["cantidad"] * gen["ganancia"]
@@ -268,6 +266,7 @@ class Manejador(SimpleHTTPRequestHandler):
                 self.end_headers()
                 return
 
+            # 🖥️ CPU
             if accion == "mejorar_cpu":
                 costo = round(estado["costo_cpu"] * descuento, 4)
                 if estado["dinero"] >= costo:
@@ -291,12 +290,23 @@ class Manejador(SimpleHTTPRequestHandler):
                     estado["estadisticas"]["mejoras_cpu"] += 1
                 estado["costo_cpu"] = costo_actual
 
+            # ⚡ Multiplicadores
             elif accion == "comprar_multiplicador":
                 costo = round(100 * estado["multiplicador_global"] * 1.9 * descuento, 4)
                 if estado["dinero"] >= costo:
                     estado["dinero"] -= costo
                     estado["multiplicador_global"] = round(estado["multiplicador_global"] * 1.3, 4)
 
+            elif accion == "comprar_max_multiplicador":
+                cantidad = max(1, int(datos.get("cantidad", 1)))
+                for _ in range(cantidad):
+                    costo = round(100 * estado["multiplicador_global"] * 1.9 * descuento, 4)
+                    if estado["dinero"] < costo:
+                        break
+                    estado["dinero"] -= costo
+                    estado["multiplicador_global"] = round(estado["multiplicador_global"] * 1.3, 4)
+
+            # 🏭 Generadores
             elif accion == "comprar_generador":
                 tipo = datos.get("tipo")
                 if tipo in estado["generadores"]:
@@ -321,6 +331,7 @@ class Manejador(SimpleHTTPRequestHandler):
                         gen["costo"] = round(gen["costo"] * 1.75, 4)
                         estado["estadisticas"]["generadores_comprados"] += 1
 
+            # 🚪 Puertas
             elif accion == "abrir_puerta":
                 id_puerta = datos.get("id")
                 if id_puerta in estado["puertas"]:
@@ -332,6 +343,7 @@ class Manejador(SimpleHTTPRequestHandler):
                         estado["multiplicador_global"] = round(estado["multiplicador_global"] + p["bono"], 4)
                         estado["estadisticas"]["puertas_abiertas"] += 1
 
+            # 🔄 Renacimiento
             elif accion == "hacer_renacimiento":
                 cantidad = max(1, int(datos.get("cantidad", 1)))
                 for _ in range(cantidad):
@@ -353,6 +365,7 @@ class Manejador(SimpleHTTPRequestHandler):
 
                 estado["tiempo_ultima"] = time.time()
 
+            # ⭐ Mejoras pasivas
             elif accion == "mejorar_pasiva":
                 tipo = datos.get("tipo")
                 if tipo in estado["mejoras_pasivas"]:
