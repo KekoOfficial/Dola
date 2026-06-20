@@ -81,6 +81,8 @@ def cargar_progreso():
             estado = fusionar(guardado, estado)
         except Exception as e:
             print(f"⚠️ Archivo reiniciado por error: {e}")
+    # REINICIAMOS TIEMPO AL CARGAR PARA QUE NO SE TRABE
+    estado["tiempo_ultima"] = time.time()
     return estado
 
 def redondear_recursivo(d):
@@ -132,27 +134,30 @@ class Manejador(SimpleHTTPRequestHandler):
             self.end_headers()
             estado = cargar_progreso()
             ahora = time.time()
-            segundos = ahora - estado["tiempo_ultima"]
-            estado["estadisticas"]["tiempo_jugado"] += segundos
+            # LIMITAMOS A 60 SEGUNDOS MÁXIMO PARA EVITAR SALTOS ENORMES
+            segundos = min(ahora - estado["tiempo_ultima"], 60)
+            if segundos > 0:
+                estado["estadisticas"]["tiempo_jugado"] += segundos
 
-            base = estado["ganancia_cpu"]
-            for gen in estado["generadores"].values():
-                base += gen["cantidad"] * gen["ganancia"]
+                base = estado["ganancia_cpu"]
+                for gen in estado["generadores"].values():
+                    base += gen["cantidad"] * gen["ganancia"]
 
-            bono_logros = calcular_bono_logros(estado)
-            total_mult = estado["multiplicador_global"] * estado["bono_renacimiento"] * bono_logros
-            ganancia = segundos * base * total_mult
+                bono_logros = calcular_bono_logros(estado)
+                total_mult = estado["multiplicador_global"] * estado["bono_renacimiento"] * bono_logros
+                ganancia = segundos * base * total_mult
 
-            estado["dinero"] = round(estado["dinero"] + ganancia, 4)
-            estado["estadisticas"]["dinero_total_ganado"] = round(estado["estadisticas"]["dinero_total_ganado"] + ganancia, 4)
+                estado["dinero"] = round(estado["dinero"] + ganancia, 4)
+                estado["estadisticas"]["dinero_total_ganado"] = round(estado["estadisticas"]["dinero_total_ganado"] + ganancia, 4)
 
-            ganancia_actual = round(base * total_mult, 4)
-            if ganancia_actual > estado["estadisticas"]["ganancia_maxima"]:
-                estado["estadisticas"]["ganancia_maxima"] = ganancia_actual
+                ganancia_actual = round(base * total_mult, 4)
+                if ganancia_actual > estado["estadisticas"]["ganancia_maxima"]:
+                    estado["estadisticas"]["ganancia_maxima"] = ganancia_actual
 
-            verificar_logros(estado)
-            estado["tiempo_ultima"] = round(ahora, 3)
-            guardar_progreso(estado)
+                verificar_logros(estado)
+                estado["tiempo_ultima"] = round(ahora, 3)
+                guardar_progreso(estado)
+            
             self.wfile.write(json.dumps(estado).encode("utf-8"))
             return
 
@@ -266,6 +271,7 @@ class Manejador(SimpleHTTPRequestHandler):
 
         if accion == "admin-cambiar-dinero":
             estado["dinero"] = max(0, round(float(datos.get("nuevo_valor", 0)), 4))
+            estado["tiempo_ultima"] = time.time()
             guardar_progreso(estado)
             self.send_response(200)
             self.end_headers()
@@ -280,6 +286,7 @@ class Manejador(SimpleHTTPRequestHandler):
                 estado["ganancia_cpu"] = round(estado["ganancia_cpu"] * 1.6, 4)
                 estado["costo_cpu"] = round(estado["costo_cpu"] * 2.0, 4)
                 estado["estadisticas"]["mejoras_cpu"] += 1
+                estado["tiempo_ultima"] = time.time()
                 guardar_progreso(estado)
                 self.send_response(200)
                 self.end_headers()
@@ -298,6 +305,7 @@ class Manejador(SimpleHTTPRequestHandler):
                 costo_actual = round(costo_actual * 2.0, 4)
                 estado["estadisticas"]["mejoras_cpu"] += 1
             estado["costo_cpu"] = costo_actual
+            estado["tiempo_ultima"] = time.time()
             guardar_progreso(estado)
             self.send_response(200)
             self.end_headers()
@@ -309,6 +317,7 @@ class Manejador(SimpleHTTPRequestHandler):
             if estado["dinero"] >= costo:
                 estado["dinero"] -= costo
                 estado["multiplicador_global"] = round(estado["multiplicador_global"] * 1.3, 4)
+                estado["tiempo_ultima"] = time.time()
                 guardar_progreso(estado)
                 self.send_response(200)
                 self.end_headers()
@@ -322,6 +331,7 @@ class Manejador(SimpleHTTPRequestHandler):
                     break
                 estado["dinero"] -= costo
                 estado["multiplicador_global"] = round(estado["multiplicador_global"] * 1.3, 4)
+            estado["tiempo_ultima"] = time.time()
             guardar_progreso(estado)
             self.send_response(200)
             self.end_headers()
@@ -338,6 +348,7 @@ class Manejador(SimpleHTTPRequestHandler):
                     gen["cantidad"] += 1
                     gen["costo"] = round(gen["costo"] * 1.75, 4)
                     estado["estadisticas"]["generadores_comprados"] += 1
+                    estado["tiempo_ultima"] = time.time()
                     guardar_progreso(estado)
                     self.send_response(200)
                     self.end_headers()
@@ -355,6 +366,7 @@ class Manejador(SimpleHTTPRequestHandler):
                     gen["cantidad"] += 1
                     gen["costo"] = round(gen["costo"] * 1.75, 4)
                     estado["estadisticas"]["generadores_comprados"] += 1
+                estado["tiempo_ultima"] = time.time()
                 guardar_progreso(estado)
                 self.send_response(200)
                 self.end_headers()
@@ -371,6 +383,7 @@ class Manejador(SimpleHTTPRequestHandler):
                     p["abierta"] = True
                     estado["multiplicador_global"] = round(estado["multiplicador_global"] + p["bono"], 4)
                     estado["estadisticas"]["puertas_abiertas"] += 1
+                    estado["tiempo_ultima"] = time.time()
                     guardar_progreso(estado)
                     self.send_response(200)
                     self.end_headers()
@@ -419,6 +432,7 @@ class Manejador(SimpleHTTPRequestHandler):
                         m["efecto"] = round(m["nivel"] * 0.015, 3)
                     elif tipo == "inicio_mejorado":
                         m["efecto"] = round(100 * (1.2 ** m["nivel"]), 2)
+                    estado["tiempo_ultima"] = time.time()
                     guardar_progreso(estado)
                     self.send_response(200)
                     self.end_headers()
