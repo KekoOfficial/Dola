@@ -1,5 +1,3 @@
-export let estado = {};
-
 export function formatearMonto(n) {
     if (typeof n !== 'number' || isNaN(n) || n < 0) return "$0.00";
     if (n >= 1e15) return `$${(n / 1e15).toFixed(2)}Q`;
@@ -18,52 +16,7 @@ export function formatearTiempo(seg) {
     return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`;
 }
 
-export function calcularBonoTotal() {
-    const mult = estado.multiplicador_global || 1;
-    const renac = estado.bono_renacimiento || 1;
-    const logros = Object.values(estado.logros || {}).reduce((t, l) => t * (l.desbloqueado ? l.bono : 1), 1);
-    return Number((mult * renac * logros).toFixed(4));
+export function aplicarDescuento(monto, estado) {
+    const descuento = estado.mejoras_pasivas?.descuento?.efecto || 0;
+    return Number((monto * (1 - descuento)).toFixed(4));
 }
-
-export function aplicarDescuento(monto) {
-    const desc = estado.mejoras_pasivas?.descuento?.efecto || 0;
-    return Number((monto * (1 - desc)).toFixed(2));
-}
-
-export function calcularGananciaPorSegundo() {
-    let base = estado.ganancia_cpu || 0;
-    for (const g of Object.values(estado.generadores || {})) {
-        base += (g.cantidad || 0) * (g.ganancia || 0);
-    }
-    return Number((base * calcularBonoTotal()).toFixed(4));
-}
-
-export async function cargarEstado() {
-    try {
-        const res = await fetch("/api/estado");
-        if (!res.ok) throw new Error("Error al cargar");
-        estado = await res.json();
-        actualizarTodo();
-    } catch (e) {
-        console.warn("Carga fallida:", e);
-    }
-}
-
-function actualizarTodo() {
-    if (!estado) return;
-    document.getElementById("dinero").textContent = formatearMonto(estado.dinero || 0);
-    document.getElementById("ganancia_seg").textContent = `${formatearMonto(calcularGananciaPorSegundo())}/seg`;
-    document.getElementById("multiplicador").textContent = `x${calcularBonoTotal().toFixed(2)}`;
-    document.getElementById("nivel_cpu").textContent = estado.nivel_cpu || 1;
-    document.getElementById("renacimientos").textContent = estado.renacimientos || 0;
-
-    import("./mejoras.js").then(m => m.mostrarMejoras());
-    import("./puertas.js").then(p => p.mostrarPuertas());
-    import("./renacimiento.js").then(r => r.mostrarRenacimiento());
-    import("./estadisticas.js").then(e => e.mostrarEstadisticas());
-    import("./logros.js").then(l => l.mostrarLogros());
-    import("./prestigio.js").then(p => p.mostrarPrestigio());
-}
-
-setInterval(cargarEstado, 1000);
-window.onload = cargarEstado;
