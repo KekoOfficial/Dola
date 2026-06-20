@@ -1,258 +1,166 @@
-// 📦 Variables globales
-export let estado = {};
-const CLAVE_ADMIN = "111";
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multiplicadores de Dinero</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: Arial, sans-serif; }
+        body { background: #0f172a; color: #f8fafc; padding: 20px; max-width: 1000px; margin: 0 auto; }
+        h1, h2, h3 { text-align: center; margin: 20px 0; color: #38bdf8; }
+        .panel { background: #1e293b; border-radius: 12px; padding: 20px; margin: 15px 0; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+        .valor { font-size: 1.2em; font-weight: bold; color: #4ade80; }
+        button { padding: 10px 18px; border: none; border-radius: 6px; background: #2563eb; color: white; cursor: pointer; font-size: 1em; margin: 5px; }
+        button:hover { background: #1d4ed8; }
+        button:disabled { background: #475569; cursor: not-allowed; }
+        .btn-max { background: #9333ea; }
+        .btn-max:hover { background: #7e22ce; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
+        .logro { padding: 10px; border-radius: 6px; margin: 5px 0; }
+        .desbloqueado { background: #064e3b; border-left: 4px solid #4ade80; }
+        .bloqueado { background: #332a22; border-left: 4px solid #fbbf24; opacity: 0.7; }
+        .fila-cpu { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    </style>
+</head>
+<body>
 
-// 🧮 Formateo de números grandes
-export function formatearMonto(n) {
-    if (typeof n !== 'number' || isNaN(n) || n < 0) return "$0.00";
-    if (n >= 1e15) return `$${(n / 1e15).toFixed(2)}Q`;
-    if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`;
-    if (n >= 1e9) return `$${(n / 1e9).toFixed(2)}B`;
-    if (n >= 1e6) return `$${(n / 1e6).toFixed(2)}M`;
-    if (n >= 1e3) return `$${(n / 1e3).toFixed(2)}K`;
-    return `$${n.toFixed(2)}`;
-}
+    <!-- 📊 Panel Principal -->
+    <div class="panel">
+        <h2>💰 Dinero: <span id="dinero" class="valor">$0.00</span></h2>
+        <p>Ganancia por segundo: <span id="ganancia_seg" class="valor">$0.00/seg</span></p>
+        <p>Multiplicador total: <span id="multiplicador" class="valor">x1.00</span></p>
+        <p>Nivel de CPU: <span id="nivel_cpu" class="valor">1</span></p>
+        <p>Renacimientos: <span id="renacimientos" class="valor">0</span></p>
+    </div>
 
-// ⏱️ Formateo de tiempo
-export function formatearTiempo(seg) {
-    if (typeof seg !== 'number' || isNaN(seg) || seg < 0) return "0h 0m";
-    const h = Math.floor(seg / 3600);
-    const m = Math.floor((seg % 3600) / 60);
-    const s = Math.floor(seg % 60);
-    return h > 0 ? `${h}h ${m}m` : m > 0 ? `${m}m ${s}s` : `${s}s`;
-}
+    <!-- 🛠️ Mejoras de CPU con opción de compra máxima -->
+    <div class="panel">
+        <h2>🖥️ Mejoras de CPU</h2>
+        <div class="fila-cpu">
+            <div>
+                <p>Costo por 1 nivel: <span id="costo_cpu" class="valor">$0.00</span></p>
+                <p>Podés comprar hasta: <span id="cant_max_cpu" class="valor">0</span> niveles</p>
+                <p>Costo total máximo: <span id="costo_total_cpu" class="valor">$0.00</span></p>
+            </div>
+            <div>
+                <button onclick="comprar1CPU()">🔹 Comprar 1 CPU</button>
+                <button class="btn-max" onclick="comprarMaxCPU()">🔺 Comprar MÁXIMO</button>
+            </div>
+        </div>
+    </div>
 
-// 📊 Cálculo de bonos totales
-export function calcularBonoTotal() {
-    const multGlobal = estado.multiplicador_global || 1.0;
-    const bonoRenacimiento = estado.bono_renacimiento || 1.0;
-    const bonoLogros = Object.values(estado.logros || {}).reduce((total, logro) => {
-        return total * (logro.desbloqueado ? (logro.bono || 1.0) : 1.0);
-    }, 1.0);
-    return Number((multGlobal * bonoRenacimiento * bonoLogros).toFixed(4));
-}
+    <!-- 🛠️ Multiplicadores -->
+    <div class="panel">
+        <h2>⚡ Multiplicadores</h2>
+        <p>Costo: <span id="costo_mult" class="valor">$0.00</span></p>
+        <button onclick="comprarMultiplicador()">Comprar</button>
+    </div>
 
-// 💰 Cálculo de ganancia por segundo
-export function calcularGananciaPorSegundo() {
-    let base = estado.ganancia_cpu || 0.0;
-    for (const gen of Object.values(estado.generadores || {})) {
-        const cantidad = gen.cantidad || 0;
-        const ganancia = gen.ganancia || 0.0;
-        base += cantidad * ganancia;
-    }
-    const total = base * calcularBonoTotal();
-    return Number(total.toFixed(4));
-}
+    <!-- 🛠️ Generadores -->
+    <div class="panel">
+        <h2>🏭 Generadores</h2>
+        <div class="grid">
+            <div>
+                <p>Básico | Cantidad: <span id="cant_basico">0</span></p>
+                <p>Costo: <span id="costo_basico">$0.00</span></p>
+                <button onclick="comprarGenerador('basico')">1 Unidad</button>
+                <button class="btn-max" onclick="comprarMaxGenerador('basico')">Máximo</button>
+            </div>
+            <div>
+                <p>Medio | Cantidad: <span id="cant_medio">0</span></p>
+                <p>Costo: <span id="costo_medio">$0.00</span></p>
+                <button onclick="comprarGenerador('medio')">1 Unidad</button>
+                <button class="btn-max" onclick="comprarMaxGenerador('medio')">Máximo</button>
+            </div>
+            <div>
+                <p>Avanzado | Cantidad: <span id="cant_avanzado">0</span></p>
+                <p>Costo: <span id="costo_avanzado">$0.00</span></p>
+                <button onclick="comprarGenerador('avanzado')">1 Unidad</button>
+                <button class="btn-max" onclick="comprarMaxGenerador('avanzado')">Máximo</button>
+            </div>
+            <div>
+                <p>Industrial | Cantidad: <span id="cant_industrial">0</span></p>
+                <p>Costo: <span id="costo_industrial">$0.00</span></p>
+                <button onclick="comprarGenerador('industrial')">1 Unidad</button>
+                <button class="btn-max" onclick="comprarMaxGenerador('industrial')">Máximo</button>
+            </div>
+            <div>
+                <p>Nuclear | Cantidad: <span id="cant_nuclear">0</span></p>
+                <p>Costo: <span id="costo_nuclear">$0.00</span></p>
+                <button onclick="comprarGenerador('nuclear')">1 Unidad</button>
+                <button class="btn-max" onclick="comprarMaxGenerador('nuclear')">Máximo</button>
+            </div>
+            <div>
+                <p>Cuántico | Cantidad: <span id="cant_cuantico">0</span></p>
+                <p>Costo: <span id="costo_cuantico">$0.00</span></p>
+                <button onclick="comprarGenerador('cuantico')">1 Unidad</button>
+                <button class="btn-max" onclick="comprarMaxGenerador('cuantico')">Máximo</button>
+            </div>
+            <div>
+                <p>Galáctico | Cantidad: <span id="cant_galactico">0</span></p>
+                <p>Costo: <span id="costo_galactico">$0.00</span></p>
+                <button onclick="comprarGenerador('galactico')">1 Unidad</button>
+                <button class="btn-max" onclick="comprarMaxGenerador('galactico')">Máximo</button>
+            </div>
+        </div>
+    </div>
 
-// 📉 Aplicar descuento de mejoras pasivas
-export function aplicarDescuento(monto) {
-    const descuento = estado.mejoras_pasivas?.descuento?.efecto || 0.0;
-    return Number((monto * (1 - descuento)).toFixed(2));
-}
+    <!-- 🚪 Puertas -->
+    <div class="panel">
+        <h2>🚪 Puertas</h2>
+        <div id="lista_puertas"></div>
+    </div>
 
-// 🔢 Calcular cuántos renacimientos se pueden hacer
-export function calcularRenacimientosPosibles() {
-    const nivelCpu = estado.nivel_cpu || 1;
-    return Math.floor(nivelCpu / 5); // Cada 5 niveles = 1 renacimiento
-}
+    <!-- 🔄 Renacimiento -->
+    <div class="panel">
+        <h2>🔄 Renacimiento</h2>
+        <p>Bono acumulado: <span id="bono_renacimiento" class="valor">x1.00</span></p>
+        <p id="info_renacer">Requisito: Nivel de CPU ≥ 5</p>
+        <button id="btn_renacer" onclick="hacerRenacimiento()">Renacer ahora</button>
+    </div>
 
-// 🔄 Cargar estado desde el servidor
-export async function cargarEstado() {
-    try {
-        const res = await fetch("/api/estado");
-        if (!res.ok) throw new Error(`Error: ${res.status}`);
-        estado = await res.json();
-        actualizarInterfaz();
-    } catch (e) {
-        console.warn("⚠️ No se pudo cargar el estado:", e);
-    }
-}
+    <!-- ⭐ Mejoras Pasivas / Prestigio -->
+    <div class="panel">
+        <h2>⭐ Mejoras Pasivas</h2>
+        <p>Ahorro | Nivel: <span id="nivel_ahorro">0</span>
+        <button onclick="mejorarPasiva('ahorro')">Mejorar</button></p>
+        <p>Descuento | Nivel: <span id="nivel_descuento">0</span>
+        <button onclick="mejorarPasiva('descuento')">Mejorar</button></p>
+        <p>Inicio Mejorado | Nivel: <span id="nivel_inicio">0</span>
+        <button onclick="mejorarPasiva('inicio_mejorado')">Mejorar</button></p>
+    </div>
 
-// 📋 Actualizar todos los datos en pantalla
-function actualizarInterfaz() {
-    if (!estado || Object.keys(estado).length === 0) return;
+    <!-- 🏆 Logros -->
+    <div class="panel">
+        <h2>🏆 Logros</h2>
+        <div id="lista_logros"></div>
+    </div>
 
-    // Datos principales
-    if (document.getElementById("dinero"))
-        document.getElementById("dinero").textContent = formatearMonto(estado.dinero || 0);
+    <!-- 📊 Estadísticas -->
+    <div class="panel">
+        <h2>📊 Estadísticas</h2>
+        <p>Dinero total ganado: <span id="total_ganado" class="valor">$0.00</span></p>
+        <p>Mejoras de CPU realizadas: <span id="mejoras_cpu">0</span></p>
+        <p>Generadores comprados: <span id="generadores_totales">0</span></p>
+        <p>Puertas abiertas: <span id="puertas_totales">0</span></p>
+        <p>Tiempo total jugado: <span id="tiempo_jugado">0h 0m</span></p>
+        <p>Ganancia máxima por segundo: <span id="ganancia_max" class="valor">$0.00</span></p>
+    </div>
 
-    if (document.getElementById("multiplicador"))
-        document.getElementById("multiplicador").textContent = `x${calcularBonoTotal().toFixed(2)}`;
+    <!-- 👤 Perfil y Administrador -->
+    <div class="panel">
+        <h2>👤 Perfil</h2>
+        <button onclick="irAPerfil()">Ir a Perfil y Panel de Administrador</button>
+    </div>
 
-    if (document.getElementById("nivel_cpu"))
-        document.getElementById("nivel_cpu").textContent = estado.nivel_cpu || 1;
+    <!-- 🔗 Enlace al JS -->
+    <script type="module" src="js/servidor.js"></script>
 
-    if (document.getElementById("renacimientos"))
-        document.getElementById("renacimientos").textContent = estado.renacimientos || 0;
-
-    if (document.getElementById("bono_renacimiento"))
-        document.getElementById("bono_renacimiento").textContent = `x${(estado.bono_renacimiento || 1.0).toFixed(2)}`;
-
-    if (document.getElementById("ganancia_seg"))
-        document.getElementById("ganancia_seg").textContent = `${formatearMonto(calcularGananciaPorSegundo())}/seg`;
-
-    // Mejoras CPU y Multiplicador
-    if (document.getElementById("costo_cpu"))
-        document.getElementById("costo_cpu").textContent = formatearMonto(aplicarDescuento(estado.costo_cpu || 0));
-
-    if (document.getElementById("costo_mult"))
-        document.getElementById("costo_mult").textContent = formatearMonto(aplicarDescuento(100 * (estado.multiplicador_global || 1) * 1.9));
-
-    // Generadores
-    const gen = estado.generadores || {};
-    for (const [tipo, datos] of Object.entries(gen)) {
-        const costo = aplicarDescuento(datos.costo || 0);
-        const idCosto = `costo_${tipo}`;
-        const idCant = `cant_${tipo}`;
-        if (document.getElementById(idCosto)) document.getElementById(idCosto).textContent = formatearMonto(costo);
-        if (document.getElementById(idCant)) document.getElementById(idCant).textContent = datos.cantidad || 0;
-    }
-
-    // Renacimientos
-    const posibles = calcularRenacimientosPosibles();
-    if (document.getElementById("info_renacer")) {
-        document.getElementById("info_renacer").textContent = posibles > 0 
-            ? `Podés hacer ${posibles} renacimiento(s) (cada 5 niveles de CPU)` 
-            : "Necesitás al menos nivel 5 de CPU";
-    }
-    if (document.getElementById("btn_renacer"))
-        document.getElementById("btn_renacer").disabled = posibles < 1;
-
-    // Puertas
-    if (document.getElementById("lista_puertas")) {
-        let html = "";
-        for (const [id, p] of Object.entries(estado.puertas || {})) {
-            const costo = aplicarDescuento(p.costo || 0);
-            if (p.abierta) {
-                html += `<div class="panel-mejora abierta"><h3>${p.nombre}</h3><p>✅ ABIERTA | Bono: +x${p.bono.toFixed(2)}</p></div>`;
-            } else {
-                html += `<div class="panel-mejora cerrada"><h3>${p.nombre}</h3>
-                    <p>Costo: ${formatearMonto(costo)} | Bono: +x${p.bono.toFixed(2)}</p>
-                    <button onclick="abrirPuerta('${id}')" ${estado.dinero < costo ? "disabled" : ""}>Abrir</button></div>`;
-            }
+    <script>
+        function irAPerfil() {
+            window.location.href = "/perfil";
         }
-        document.getElementById("lista_puertas").innerHTML = html;
-    }
+    </script>
 
-    // Estadísticas
-    if (document.getElementById("total_ganado")) {
-        const s = estado.estadisticas || {};
-        document.getElementById("total_ganado").textContent = formatearMonto(s.dinero_total_ganado || 0);
-        document.getElementById("mejoras_cpu").textContent = s.mejoras_cpu || 0;
-        document.getElementById("generadores_totales").textContent = s.generadores_comprados || 0;
-        document.getElementById("puertas_totales").textContent = s.puertas_abiertas || 0;
-        document.getElementById("tiempo_jugado").textContent = formatearTiempo(s.tiempo_jugado || 0);
-        document.getElementById("ganancia_max").textContent = formatearMonto(s.ganancia_maxima || 0);
-    }
-
-    // Logros
-    if (document.getElementById("lista_logros")) {
-        let html = "";
-        for (const l of Object.values(estado.logros || {})) {
-            html += `<div class="logro ${l.desbloqueado ? 'desbloqueado' : 'bloqueado'}">
-                <p>${l.desbloqueado ? '✅' : '❌'} ${l.descripcion}</p></div>`;
-        }
-        document.getElementById("lista_logros").innerHTML = html;
-    }
-
-    // Mejoras pasivas
-    if (document.getElementById("nivel_ahorro")) {
-        const mp = estado.mejoras_pasivas || {};
-        document.getElementById("nivel_ahorro").textContent = mp.ahorro?.nivel || 0;
-        document.getElementById("nivel_descuento").textContent = mp.descuento?.nivel || 0;
-        document.getElementById("nivel_inicio").textContent = mp.inicio_mejorado?.nivel || 0;
-    }
-}
-
-// ⚡ Acciones generales
-export async function mejorarCPU() {
-    await fetch("/api/mejorar_cpu", { method: "POST" });
-    cargarEstado();
-}
-
-export async function comprarMultiplicador() {
-    await fetch("/api/comprar_multiplicador", { method: "POST" });
-    cargarEstado();
-}
-
-export async function comprarGenerador(tipo) {
-    await fetch("/api/comprar_generador", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tipo })
-    });
-    cargarEstado();
-}
-
-export async function comprarMaxGenerador(tipo) {
-    await fetch("/api/comprar_max_generador", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tipo })
-    });
-    cargarEstado();
-}
-
-export async function abrirPuerta(id) {
-    await fetch("/api/abrir_puerta", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id })
-    });
-    cargarEstado();
-}
-
-// 🔄 Renacimiento con cantidad automática
-export async function hacerRenacimiento() {
-    const cantidad = calcularRenacimientosPosibles();
-    if (cantidad < 1) return;
-    if (!confirm(`¿Querés hacer ${cantidad} renacimiento(s)?\nSe reinicia progreso pero se mantienen logros y mejoras pasivas.`)) return;
-
-    await fetch("/api/hacer_renacimiento", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cantidad: cantidad })
-    });
-    cargarEstado();
-}
-
-export async function mejorarPasiva(tipo) {
-    await fetch("/api/mejorar_pasiva", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ tipo })
-    });
-    cargarEstado();
-}
-
-// 👤 Administrador
-export async function verificarAdmin(clave) {
-    const res = await fetch("/api/verificar-admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clave })
-    });
-    return (await res.json()).ok;
-}
-
-export async function cambiarDineroAdmin(nuevoValor) {
-    await fetch("/api/admin-cambiar-dinero", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nuevo_valor: nuevoValor })
-    });
-    cargarEstado();
-}
-
-// 🔁 Actualización automática cada segundo
-setInterval(cargarEstado, 1000);
-window.onload = cargarEstado;
-
-// 📤 Hacer funciones accesibles desde el HTML
-window.mejorarCPU = mejorarCPU;
-window.comprarMultiplicador = comprarMultiplicador;
-window.comprarGenerador = comprarGenerador;
-window.comprarMaxGenerador = comprarMaxGenerador;
-window.abrirPuerta = abrirPuerta;
-window.hacerRenacimiento = hacerRenacimiento;
-window.mejorarPasiva = mejorarPasiva;
+</body>
+</html>
