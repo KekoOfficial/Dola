@@ -1,4 +1,4 @@
-let estado = {};
+export let estado = {};
 
 export function formatearMonto(n) {
     if (typeof n !== 'number' || isNaN(n) || n < 0) return "$0.00";
@@ -30,6 +30,14 @@ export function aplicarDescuento(monto) {
     return Number((monto * (1 - desc)).toFixed(2));
 }
 
+export function calcularGananciaPorSegundo() {
+    let base = estado.ganancia_cpu || 0;
+    for (const g of Object.values(estado.generadores || {})) {
+        base += (g.cantidad || 0) * (g.ganancia || 0);
+    }
+    return Number((base * calcularBonoTotal()).toFixed(4));
+}
+
 export async function cargarEstado() {
     try {
         const res = await fetch("/api/estado");
@@ -42,17 +50,19 @@ export async function cargarEstado() {
 }
 
 function actualizarTodo() {
-    if (document.getElementById("dinero")) document.getElementById("dinero").textContent = formatearMonto(estado.dinero || 0);
-    if (document.getElementById("multiplicador")) document.getElementById("multiplicador").textContent = `x${calcularBonoTotal().toFixed(2)}`;
-    if (document.getElementById("nivel_cpu")) document.getElementById("nivel_cpu").textContent = estado.nivel_cpu || 1;
-    if (document.getElementById("renacimientos")) document.getElementById("renacimientos").textContent = estado.renacimientos || 0;
-    if (document.getElementById("ganancia_seg")) document.getElementById("ganancia_seg").textContent = formatearMonto(calcularGanancia()) + "/seg";
-}
+    if (!estado) return;
+    document.getElementById("dinero").textContent = formatearMonto(estado.dinero || 0);
+    document.getElementById("ganancia_seg").textContent = `${formatearMonto(calcularGananciaPorSegundo())}/seg`;
+    document.getElementById("multiplicador").textContent = `x${calcularBonoTotal().toFixed(2)}`;
+    document.getElementById("nivel_cpu").textContent = estado.nivel_cpu || 1;
+    document.getElementById("renacimientos").textContent = estado.renacimientos || 0;
 
-function calcularGanancia() {
-    let base = estado.ganancia_cpu || 0;
-    for (const g of Object.values(estado.generadores || {})) base += (g.cantidad || 0) * (g.ganancia || 0);
-    return base * calcularBonoTotal();
+    import("./mejoras.js").then(m => m.mostrarMejoras());
+    import("./puertas.js").then(p => p.mostrarPuertas());
+    import("./renacimiento.js").then(r => r.mostrarRenacimiento());
+    import("./estadisticas.js").then(e => e.mostrarEstadisticas());
+    import("./logros.js").then(l => l.mostrarLogros());
+    import("./prestigio.js").then(p => p.mostrarPrestigio());
 }
 
 setInterval(cargarEstado, 1000);
