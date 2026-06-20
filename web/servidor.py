@@ -4,10 +4,12 @@ import os
 import time
 import shutil
 
+# Configuración
 CARPETA_DATOS = "datos"
 ARCHIVO_PROGRESO = os.path.join(CARPETA_DATOS, "progreso.json")
 ARCHIVO_RESPALDO = os.path.join(CARPETA_DATOS, "respaldo_progreso.json")
 CONTRASEÑA_ADMIN = "111"
+MAX_SEGUNDOS_CALCULO = 60  # Evita saltos enormes si estás mucho tiempo sin entrar
 
 def crear_estructura():
     os.makedirs(CARPETA_DATOS, exist_ok=True)
@@ -81,7 +83,7 @@ def cargar_progreso():
             estado = fusionar(guardado, estado)
         except Exception as e:
             print(f"⚠️ Archivo reiniciado por error: {e}")
-    # REINICIAMOS TIEMPO AL CARGAR PARA QUE NO SE TRABE
+    # ✅ SIEMPRE ACTUALIZAMOS EL TIEMPO AL CARGAR
     estado["tiempo_ultima"] = time.time()
     return estado
 
@@ -99,12 +101,12 @@ def guardar_progreso(estado):
         json.dump(estado, f, indent=2, ensure_ascii=False)
     shutil.copy2(ARCHIVO_PROGRESO, ARCHIVO_RESPALDO)
 
-def calcular_bono_logros(estado):
-    multiplicador = 1.0
-    for logro in estado["logros"].values():
-        if logro["desbloqueado"]:
-            multiplicador *= logro["bono"]
-    return round(multiplicador, 4)
+def calcular_bono_total(estado):
+    logros = 1.0
+    for l in estado["logros"].values():
+        if l["desbloqueado"]:
+            logros *= l["bono"]
+    return round(estado["multiplicador_global"] * estado["bono_renacimiento"] * logros, 4)
 
 def verificar_logros(estado):
     if not estado["logros"]["primeros_1k"]["desbloqueado"] and estado["dinero"] >= 1000:
@@ -134,30 +136,27 @@ class Manejador(SimpleHTTPRequestHandler):
             self.end_headers()
             estado = cargar_progreso()
             ahora = time.time()
-            # LIMITAMOS A 60 SEGUNDOS MÁXIMO PARA EVITAR SALTOS ENORMES
-            segundos = min(ahora - estado["tiempo_ultima"], 60)
+            segundos = min(ahora - estado["tiempo_ultima"], MAX_SEGUNDOS_CALCULO)
+
             if segundos > 0:
                 estado["estadisticas"]["tiempo_jugado"] += segundos
 
-                base = estado["ganancia_cpu"]
+                # Cálculo de ganancia base
+                ganancia_base = estado["ganancia_cpu"]
                 for gen in estado["generadores"].values():
-                    base += gen["cantidad"] * gen["ganancia"]
+                    ganancia_base += gen["cantidad"] * gen["ganancia"]
 
-                bono_logros = calcular_bono_logros(estado)
-                total_mult = estado["multiplicador_global"] * estado["bono_renacimiento"] * bono_logros
-                ganancia = segundos * base * total_mult
+                ganancia_total = ganancia_base * calcular_bono_total(estado)
+                estado["dinero"] = round(estado["dinero"] + ganancia_total * segundos, 4)
+                estado["estadisticas"]["dinero_total_ganado"] = round(estado["estadisticas"]["dinero_total_ganado"] + ganancia_total * segundos, 4)
 
-                estado["dinero"] = round(estado["dinero"] + ganancia, 4)
-                estado["estadisticas"]["dinero_total_ganado"] = round(estado["estadisticas"]["dinero_total_ganado"] + ganancia, 4)
-
-                ganancia_actual = round(base * total_mult, 4)
-                if ganancia_actual > estado["estadisticas"]["ganancia_maxima"]:
-                    estado["estadisticas"]["ganancia_maxima"] = ganancia_actual
+                if ganancia_total > estado["estadisticas"]["ganancia_maxima"]:
+                    estado["estadisticas"]["ganancia_maxima"] = round(ganancia_total, 4)
 
                 verificar_logros(estado)
                 estado["tiempo_ultima"] = round(ahora, 3)
                 guardar_progreso(estado)
-            
+
             self.wfile.write(json.dumps(estado).encode("utf-8"))
             return
 
@@ -165,85 +164,81 @@ class Manejador(SimpleHTTPRequestHandler):
             self.send_response(200)
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
-            html = """
-            <!DOCTYPE html>
-            <html lang="es">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Perfil</title>
-                <style>
-                    body { font-family: Arial; background: #1a1a2e; color: white; text-align: center; padding: 20px; }
-                    .btn { padding: 12px 25px; margin: 10px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; }
-                    .btn-admin { background: #e94560; color: white; }
-                    .btn-volver { background: #0f3460; color: white; }
-                    .panel { background: #16213e; padding: 25px; border-radius: 10px; max-width: 420px; margin: 20px auto; display: none; }
-                    input { padding: 10px; width: 85%; margin: 10px 0; border-radius: 5px; border: none; font-size: 16px; }
-                </style>
-            </head>
-            <body>
-                <h2>👤 Perfil</h2>
-                <button class="btn btn-admin" onclick="mostrarLogin()">🔑 Acceso Administrador</button>
-                <br><br>
-                <button class="btn btn-volver" onclick="window.location.href='/'">⬅️ Volver al Menú Principal</button>
+            self.wfile.write("""
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfil - Administrador</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+        body{background:#12121f;color:#fff;padding:20px;max-width:450px;margin:0 auto;}
+        h2{text-align:center;margin-bottom:25px;color:#4facfe;}
+        .panel{background:#1e1e2f;padding:25px;border-radius:12px;margin:15px 0;box-shadow:0 4px 12px rgba(0,0,0,0.3);}
+        input{width:100%;padding:12px;margin:12px 0;border-radius:8px;border:none;background:#2d2d44;color:#fff;font-size:16px;}
+        button{width:100%;padding:12px;border:none;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;margin:8px 0;}
+        .btn-admin{background:#e63946;color:white;}
+        .btn-volver{background:#457b9d;color:white;}
+        .btn-admin:hover{background:#d62828;}
+        .btn-volver:hover{background:#1d3557;}
+    </style>
+</head>
+<body>
+    <h2>👤 Perfil y Administración</h2>
+    <div class="panel" id="login">
+        <h3>Acceso Administrador</h3>
+        <input type="password" id="clave" placeholder="Ingrese contraseña">
+        <button class="btn-admin" onclick="entrar()">Ingresar</button>
+        <button class="btn-volver" onclick="volver()">Volver al juego</button>
+    </div>
 
-                <div id="loginAdmin" class="panel">
-                    <h3>Ingresar Contraseña</h3>
-                    <input type="password" id="clave" placeholder="Escribir contraseña">
-                    <br>
-                    <button class="btn btn-admin" onclick="verificar()">Entrar</button>
-                    <button class="btn btn-volver" onclick="cerrarLogin()">Cancelar</button>
-                </div>
+    <div class="panel" id="panelAdmin" style="display:none;">
+        <h3>⚙️ Control Total</h3>
+        <p>Dinero actual: <strong id="dineroActual">$0.00</strong></p>
+        <input type="number" step="0.01" min="0" id="nuevoDinero" placeholder="Nueva cantidad de dinero">
+        <button class="btn-admin" onclick="guardarCambios()">💾 Guardar cambios</button>
+        <button class="btn-volver" onclick="cerrarAdmin()">Cerrar</button>
+    </div>
 
-                <div id="panelAdmin" class="panel">
-                    <h3>⚙️ Panel de Administrador</h3>
-                    <p>Dinero actual: <strong>$<span id="dineroActual">0.00</span></strong></p>
-                    <input type="number" step="0.01" id="nuevoDinero" placeholder="Cantidad nueva">
-                    <br>
-                    <button class="btn btn-admin" onclick="guardarDinero()">💾 Guardar</button>
-                    <br><br>
-                    <button class="btn btn-volver" onclick="salir()">🚪 Volver</button>
-                </div>
-
-                <script>
-                    async function cargarDatos() {
-                        const res = await fetch('/api/estado');
-                        const datos = await res.json();
-                        document.getElementById('dineroActual').textContent = datos.dinero.toFixed(2);
-                    }
-                    function mostrarLogin() { document.getElementById('loginAdmin').style.display = 'block'; }
-                    function cerrarLogin() { document.getElementById('loginAdmin').style.display = 'none'; }
-                    async function verificar() {
-                        const clave = document.getElementById('clave').value.trim();
-                        const res = await fetch('/api/verificar-admin', {
-                            method: 'POST',
-                            headers: {'Content-Type':'application/json'},
-                            body: JSON.stringify({clave: clave})
-                        });
-                        const respuesta = await res.json();
-                        if(respuesta.ok) {
-                            cerrarLogin();
-                            document.getElementById('panelAdmin').style.display = 'block';
-                            cargarDatos();
-                        } else alert('❌ Contraseña incorrecta');
-                    }
-                    async function guardarDinero() {
-                        const monto = parseFloat(document.getElementById('nuevoDinero').value);
-                        if(isNaN(monto) || monto < 0) return alert('⚠️ Número inválido');
-                        await fetch('/api/admin-cambiar-dinero', {
-                            method: 'POST',
-                            headers: {'Content-Type':'application/json'},
-                            body: JSON.stringify({nuevo_valor: monto})
-                        });
-                        alert('✅ Dinero actualizado');
-                        cargarDatos();
-                    }
-                    function salir() { window.location.href = '/'; }
-                </script>
-            </body>
-            </html>
-            """
-            self.wfile.write(html.encode("utf-8"))
+    <script>
+        async function cargarEstado(){
+            const res = await fetch('/api/estado');
+            const datos = await res.json();
+            document.getElementById('dineroActual').textContent = `$${datos.dinero.toFixed(2)}`;
+        }
+        async function entrar(){
+            const clave = document.getElementById('clave').value.trim();
+            const res = await fetch('/api/verificar-admin', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({clave})
+            });
+            const r = await res.json();
+            if(r.ok){
+                document.getElementById('login').style.display = 'none';
+                document.getElementById('panelAdmin').style.display = 'block';
+                cargarEstado();
+            }else alert('❌ Contraseña incorrecta');
+        }
+        async function guardarCambios(){
+            const valor = parseFloat(document.getElementById('nuevoDinero').value) || 0;
+            await fetch('/api/admin-cambiar-dinero', {
+                method: 'POST',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({nuevo_valor: valor})
+            });
+            alert('✅ Dinero actualizado. Ahora sigue generando automáticamente.');
+            cargarEstado();
+        }
+        function cerrarAdmin(){
+            document.getElementById('panelAdmin').style.display = 'none';
+            document.getElementById('login').style.display = 'block';
+        }
+        function volver(){window.location.href='/';}
+    </script>
+</body>
+            """.encode("utf-8"))
             return
 
         return super().do_GET()
@@ -262,16 +257,15 @@ class Manejador(SimpleHTTPRequestHandler):
 
         # --- ADMIN ---
         if accion == "verificar-admin":
-            ok = (datos.get("clave") == CONTRASEÑA_ADMIN)
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.end_headers()
-            self.wfile.write(json.dumps({"ok": ok}).encode("utf-8"))
+            self.wfile.write(json.dumps({"ok": datos.get("clave") == CONTRASEÑA_ADMIN}).encode("utf-8"))
             return
 
         if accion == "admin-cambiar-dinero":
             estado["dinero"] = max(0, round(float(datos.get("nuevo_valor", 0)), 4))
-            estado["tiempo_ultima"] = time.time()
+            estado["tiempo_ultima"] = time.time()  # ✅ REINICIAMOS CONTADOR AL CAMBIAR DINERO
             guardar_progreso(estado)
             self.send_response(200)
             self.end_headers()
@@ -288,17 +282,16 @@ class Manejador(SimpleHTTPRequestHandler):
                 estado["estadisticas"]["mejoras_cpu"] += 1
                 estado["tiempo_ultima"] = time.time()
                 guardar_progreso(estado)
-                self.send_response(200)
-                self.end_headers()
-                return
+            self.send_response(200)
+            self.end_headers()
+            return
 
         if accion == "comprar_max_cpu":
             cantidad = max(1, int(datos.get("cantidad", 1)))
             costo_actual = estado["costo_cpu"]
             for _ in range(cantidad):
                 costo = round(costo_actual * descuento, 4)
-                if estado["dinero"] < costo:
-                    break
+                if estado["dinero"] < costo: break
                 estado["dinero"] -= costo
                 estado["nivel_cpu"] += 1
                 estado["ganancia_cpu"] = round(estado["ganancia_cpu"] * 1.6, 4)
@@ -319,16 +312,14 @@ class Manejador(SimpleHTTPRequestHandler):
                 estado["multiplicador_global"] = round(estado["multiplicador_global"] * 1.3, 4)
                 estado["tiempo_ultima"] = time.time()
                 guardar_progreso(estado)
-                self.send_response(200)
-                self.end_headers()
-                return
+            self.send_response(200)
+            self.end_headers()
+            return
 
         if accion == "comprar_max_multiplicador":
-            cantidad = max(1, int(datos.get("cantidad", 1)))
-            for _ in range(cantidad):
+            for _ in range(max(1, int(datos.get("cantidad", 1)))):
                 costo = round(100 * estado["multiplicador_global"] * 1.9 * descuento, 4)
-                if estado["dinero"] < costo:
-                    break
+                if estado["dinero"] < costo: break
                 estado["dinero"] -= costo
                 estado["multiplicador_global"] = round(estado["multiplicador_global"] * 1.3, 4)
             estado["tiempo_ultima"] = time.time()
@@ -341,42 +332,41 @@ class Manejador(SimpleHTTPRequestHandler):
         if accion == "comprar_generador":
             tipo = datos.get("tipo")
             if tipo in estado["generadores"]:
-                gen = estado["generadores"][tipo]
-                costo = round(gen["costo"] * descuento, 4)
+                g = estado["generadores"][tipo]
+                costo = round(g["costo"] * descuento, 4)
                 if estado["dinero"] >= costo:
                     estado["dinero"] -= costo
-                    gen["cantidad"] += 1
-                    gen["costo"] = round(gen["costo"] * 1.75, 4)
+                    g["cantidad"] += 1
+                    g["costo"] = round(g["costo"] * 1.75, 4)
                     estado["estadisticas"]["generadores_comprados"] += 1
                     estado["tiempo_ultima"] = time.time()
                     guardar_progreso(estado)
-                    self.send_response(200)
-                    self.end_headers()
-                    return
+            self.send_response(200)
+            self.end_headers()
+            return
 
         if accion == "comprar_max_generador":
             tipo = datos.get("tipo")
             if tipo in estado["generadores"]:
-                gen = estado["generadores"][tipo]
+                g = estado["generadores"][tipo]
                 while True:
-                    costo = round(gen["costo"] * descuento, 4)
-                    if estado["dinero"] < costo:
-                        break
+                    costo = round(g["costo"] * descuento, 4)
+                    if estado["dinero"] < costo: break
                     estado["dinero"] -= costo
-                    gen["cantidad"] += 1
-                    gen["costo"] = round(gen["costo"] * 1.75, 4)
+                    g["cantidad"] += 1
+                    g["costo"] = round(g["costo"] * 1.75, 4)
                     estado["estadisticas"]["generadores_comprados"] += 1
                 estado["tiempo_ultima"] = time.time()
                 guardar_progreso(estado)
-                self.send_response(200)
-                self.end_headers()
-                return
+            self.send_response(200)
+            self.end_headers()
+            return
 
         # --- PUERTAS ---
         if accion == "abrir_puerta":
-            id_puerta = datos.get("id")
-            if id_puerta in estado["puertas"]:
-                p = estado["puertas"][id_puerta]
+            id_p = datos.get("id")
+            if id_p in estado["puertas"]:
+                p = estado["puertas"][id_p]
                 costo = round(p["costo"] * descuento, 4)
                 if not p["abierta"] and estado["dinero"] >= costo:
                     estado["dinero"] -= costo
@@ -385,34 +375,24 @@ class Manejador(SimpleHTTPRequestHandler):
                     estado["estadisticas"]["puertas_abiertas"] += 1
                     estado["tiempo_ultima"] = time.time()
                     guardar_progreso(estado)
-                    self.send_response(200)
-                    self.end_headers()
-                    return
+            self.send_response(200)
+            self.end_headers()
+            return
 
         # --- RENACIMIENTO ---
         if accion == "hacer_renacimiento":
-            cantidad = max(1, int(datos.get("cantidad", 1)))
-            for _ in range(cantidad):
-                if estado["nivel_cpu"] < 5:
-                    break
+            for _ in range(max(1, int(datos.get("cantidad", 1)))):
+                if estado["nivel_cpu"] < 5: break
                 estado["renacimientos"] += 1
                 estado["bono_renacimiento"] = round(estado["bono_renacimiento"] * 1.5, 4)
-
                 estado["dinero"] = round(estado["mejoras_pasivas"]["inicio_mejorado"]["efecto"], 4)
                 estado["multiplicador_global"] = 1.00
                 estado["nivel_cpu"] = 1
                 estado["ganancia_cpu"] = 0.50
                 estado["costo_cpu"] = 150.00
-
-                for g in estado["generadores"].values():
-                    g["cantidad"] = 0
-                    g["costo"] = estado_base()["generadores"][g["tipo"]]["costo"] if "tipo" in g else estado_base()["generadores"][list(estado["generadores"].keys())[0]]["costo"]
-
-                for p in estado["puertas"].values():
-                    p["abierta"] = False
-
+                for g in estado["generadores"].values(): g["cantidad"] = 0; g["costo"] = estado_base()["generadores"][g["tipo"]]["costo"]
+                for p in estado["puertas"].values(): p["abierta"] = False
                 estado["tiempo_ultima"] = time.time()
-
             guardar_progreso(estado)
             self.send_response(200)
             self.end_headers()
@@ -426,24 +406,21 @@ class Manejador(SimpleHTTPRequestHandler):
                 if estado["renacimientos"] >= m["costo"]:
                     estado["renacimientos"] -= m["costo"]
                     m["nivel"] += 1
-                    if tipo == "ahorro":
-                        m["efecto"] = round(m["nivel"] * 0.02, 3)
-                    elif tipo == "descuento":
-                        m["efecto"] = round(m["nivel"] * 0.015, 3)
-                    elif tipo == "inicio_mejorado":
-                        m["efecto"] = round(100 * (1.2 ** m["nivel"]), 2)
+                    if tipo == "ahorro": m["efecto"] = round(m["nivel"] * 0.02, 3)
+                    elif tipo == "descuento": m["efecto"] = round(m["nivel"] * 0.015, 3)
+                    elif tipo == "inicio_mejorado": m["efecto"] = round(100 * (1.2 ** m["nivel"]), 2)
                     estado["tiempo_ultima"] = time.time()
                     guardar_progreso(estado)
-                    self.send_response(200)
-                    self.end_headers()
-                    return
+            self.send_response(200)
+            self.end_headers()
+            return
 
         self.send_response(400)
         self.end_headers()
 
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
-    servidor = HTTPServer(("0.0.0.0", 8080), Manejador)
     print("✅ Servidor corriendo en http://localhost:8080")
     print("🔑 Contraseña Admin: 111")
+    servidor = HTTPServer(("0.0.0.0", 8080), Manejador)
     servidor.serve_forever()
